@@ -1,4 +1,5 @@
 #include "vex.h"
+#include "MiniPID.h"
 
 using namespace vex;
 double driveSpeedFactor = 1;
@@ -32,7 +33,7 @@ motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
 motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
 drivetrain Drivetrain = drivetrain(LeftSide, RightSide, 319.19, 355.59999999999997, 292.09999999999997, mm, 1.0);
 controller Controller1;
-
+inertial Gyro = inertial(2);
 
 extern void screenReset() {
   Brain.Screen.clearScreen();
@@ -186,16 +187,49 @@ extern void pre_auton(void) {
   }
 }
 
-/*void deployStack() {
-  TilterMotor.setBrake(brake);
-  int error = 2000;
-  int tilt_speed = 100;
-  while(error > 100 && tilt_speed > 5) {
-    error = 3500-Poten.value(rotationUnits::raw);
-    tilt_speed = error * 100/1700;
-    TilterMotor.spin(fwd, tilt_speed, pct);
+// void deployStack() {
+//   TilterMotor.setBrake(brake);
+//   int error = 2000;
+//   int tilt_speed = 100;
+//   while(error > 100 && tilt_speed > 5) {
+//     error = 3800-Poten.value(rotationUnits::raw);
+//     tilt_speed = error * 100/1700;
+//     TilterMotor.spin(fwd, tilt_speed, pct);
+//   }
+//   wait(1, sec);
+//   Drivetrain.driveFor(directionType::rev, 6, inches);
+//   while(Poten.value > 1800) {
+//     TilterMotor.spin(directionType::rev, 100, pct);
+//   }
+// }
+
+void turnRight(double deg) {
+  double error = 100;
+  double Kp = 1;
+  double speed = 0;
+  if (deg <= 180) {
+    while (Gyro.angle() < deg) {
+      error = deg - Gyro.angle();
+      speed = error*Kp;
+      RightSide.spin(directionType::rev, speed, pct);
+      LeftSide.spin(fwd, speed, pct);
+    }
   }
-}*/
+}
+
+void turnLeft(double deg) {
+  double error = 100;
+  double Kp = 1;
+  double speed = 0;
+  if (deg >= 180) {
+    while (Gyro.angle() > deg) {
+    error = deg - Gyro.angle();
+    speed = error*Kp;
+    RightSide.spin(fwd, speed, pct);
+    LeftSide.spin(directionType::rev, speed, pct);
+    }
+  }
+}
 
 void controls() {
   LeftSide.spin(directionType::fwd, ((Controller1.Axis3.value()*abs(Controller1.Axis3.value())/100)/driveSpeedFactor), velocityUnits::pct);

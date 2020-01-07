@@ -2,6 +2,7 @@
 
 #include "vex.h"
 #include <cmath>
+#include "MiniPID.h"
 
 using namespace vex;
 int driveSpeedFactor = 1;
@@ -12,8 +13,6 @@ int mode = 0;
 std::string driveType = "Tank Controls";
 std::string driveSpeed = "Drive Speed Normal"; 
 
-
-// A global instance of competition
 competition Competition;
 motor RightFrontMotor = motor(PORT13, ratio18_1, true);
 motor RightRearMotor = motor(PORT12, ratio18_1, true);
@@ -29,6 +28,8 @@ motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
 motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
 drivetrain Drivetrain = drivetrain(LeftSide, RightSide, 319.19, 355.59999999999997, 292.09999999999997, mm, 1.0);
 controller Controller1;
+inertial Gyro = inertial(2);
+MiniPID pid = MiniPID(1, 0, 0);
 
 extern void askPosition() {
   Brain.Screen.clearScreen();
@@ -118,16 +119,21 @@ extern void pre_auton(void) {
   }
 }
 
-/*void deployStack() {
-  TilterMotor.setBrake(brake);
-  int error = 2000;
-  int tilt_speed = 100;
-  while(error > 100 && tilt_speed > 5) {
-    error = 3500-Poten.value(rotationUnits::raw);
-    tilt_speed = error * 100/1700;
-    TilterMotor.spin(fwd, tilt_speed, pct);
-  }
-}*/
+// void deployStack() {
+//   TilterMotor.setBrake(brake);
+//   int error = 2000;
+//   int tilt_speed = 100;
+//   while(error > 100 && tilt_speed > 5) {
+//     error = 3800-Poten.value(rotationUnits::raw);
+//     tilt_speed = error * 100/1700;
+//     TilterMotor.spin(fwd, tilt_speed, pct);
+//   }
+//   wait(1, sec);
+//   Drivetrain.driveFor(directionType::rev, 6, inches);
+//   while(Poten.value > 1800) {
+//     TilterMotor.spin(directionType::rev, 100, pct);
+//   }
+// }
 
 void flipOut() {
   TilterMotor.setVelocity(100, pct);
@@ -138,6 +144,34 @@ void flipOut() {
   BarMotor.spinFor(fwd, 400, deg);
   wait(1, msec);
   BarMotor.spinFor(directionType::rev, 400, deg);
+}
+
+void turnRight(double deg) {
+  double error = 100;
+  double Kp = 1;
+  double speed = 0;
+  if (deg <= 180) {
+    while (Gyro.angle() < deg) {
+      error = deg - Gyro.angle();
+      speed = error*Kp;
+      RightSide.spin(directionType::rev, speed, pct);
+      LeftSide.spin(fwd, speed, pct);
+    }
+  }
+}
+
+void turnLeft(double deg) {
+  double error = 100;
+  double Kp = 1;
+  double speed = 0;
+  if (deg >= 180) {
+    while (Gyro.angle() > deg) {
+    error = deg - Gyro.angle();
+    speed = error*Kp;
+    RightSide.spin(fwd, speed, pct);
+    LeftSide.spin(directionType::rev, speed, pct);
+    }
+  }
 }
 
 void autoRFS() {
@@ -206,6 +240,7 @@ void autoSkills() {
 }
 
 void autonomous(void) {
+  Gyro.calibrate();
   Drivetrain.setStopping(hold);
   Intakes.setStopping(coast);
   BarMotor.setStopping(brake);
