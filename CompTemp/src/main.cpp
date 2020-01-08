@@ -14,22 +14,23 @@ std::string driveType = "Tank Controls";
 std::string driveSpeed = "Drive Speed Normal"; 
 
 competition Competition;
+brain Brain;
 motor RightFrontMotor = motor(PORT13, ratio18_1, true);
 motor RightRearMotor = motor(PORT12, ratio18_1, true);
 motor LeftRearMotor = motor(PORT19, ratio18_1, false);
 motor LeftFrontMotor = motor(PORT18, ratio18_1, false);
-motor LeftIntakeMotor = motor(PORT20, ratio18_1, false);
-motor RightIntakeMotor = motor(PORT11, ratio18_1, true);
-motor TilterMotor = motor(PORT17, ratio36_1, false);
+motor LeftIntakeMotor = motor(PORT20, ratio18_1, true);
+motor RightIntakeMotor = motor(PORT11, ratio18_1, false);
+motor TilterMotor = motor(PORT17, ratio36_1, true);
 motor BarMotor = motor(PORT14, ratio36_1, true);
-//pot Poten = pot(Brain.ThreeWirePort.A);
+pot Poten = pot(Brain.ThreeWirePort.H);
 motor_group LeftSide = motor_group(LeftFrontMotor, LeftRearMotor);
 motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
 motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
 drivetrain Drivetrain = drivetrain(LeftSide, RightSide, 319.19, 355.59999999999997, 292.09999999999997, mm, 1.0);
 controller Controller1;
 inertial Gyro = inertial(2);
-MiniPID pid = MiniPID(1, 0, 0);
+MiniPID tilt = MiniPID(1, 0, 0);
 
 extern void askPosition() {
   Brain.Screen.clearScreen();
@@ -119,21 +120,21 @@ extern void pre_auton(void) {
   }
 }
 
-// void deployStack() {
-//   TilterMotor.setBrake(brake);
-//   int error = 2000;
-//   int tilt_speed = 100;
-//   while(error > 100 && tilt_speed > 5) {
-//     error = 3800-Poten.value(rotationUnits::raw);
-//     tilt_speed = error * 100/1700;
-//     TilterMotor.spin(fwd, tilt_speed, pct);
-//   }
-//   wait(1, sec);
-//   Drivetrain.driveFor(directionType::rev, 6, inches);
-//   while(Poten.value > 1800) {
-//     TilterMotor.spin(directionType::rev, 100, pct);
-//   }
-// }
+void deployStack() {
+  TilterMotor.setBrake(brake);
+  double error = 2000;
+  double tilt_speed = 100;
+  while(error > 100 && tilt_speed > 5) {
+    error = std::abs(1470-Poten.angle(rotationUnits::raw));
+    tilt_speed = error/50;
+    TilterMotor.spin(fwd, tilt_speed, pct);
+  }
+  // wait(1, sec);
+  // Drivetrain.driveFor(directionType::rev, 6, inches);
+  // while(Poten.value(rotationUnits::raw) < 3700) {
+  //   TilterMotor.spin(directionType::rev, 100, pct);
+  // }
+}
 
 void flipOut() {
   TilterMotor.setVelocity(100, pct);
@@ -305,7 +306,8 @@ void usercontrol(void) {
     
     // Tilter Commands
     if (Controller1.ButtonL1.pressing()) {
-      TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
+      // TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
+      deployStack();
     } else if (Controller1.ButtonL2.pressing()) {
       TilterMotor.spin(directionType::rev, 35, velocityUnits::pct);
     } else {

@@ -1,4 +1,7 @@
+#define _USE_MATH_DEFINES
+
 #include "vex.h"
+#include <cmath>
 #include "MiniPID.h"
 
 using namespace vex;
@@ -7,7 +10,7 @@ std::string driveSpeed;
 int mode = 0;
 bool rec = false;
 bool pl = false;
-bool rf = false;
+bool rf = false;    
 bool bf = false;
 bool rs = false;
 bool bs = false;
@@ -19,15 +22,16 @@ int driveMode = 0;
 
 // A global instance of competition
 competition Competition;
+brain Brain;
 motor RightFrontMotor = motor(PORT13, ratio18_1, true);
 motor RightRearMotor = motor(PORT12, ratio18_1, true);
 motor LeftRearMotor = motor(PORT19, ratio18_1, false);
 motor LeftFrontMotor = motor(PORT18, ratio18_1, false);
-motor LeftIntakeMotor = motor(PORT20, ratio18_1, false);
-motor RightIntakeMotor = motor(PORT11, ratio18_1, true);
-motor TilterMotor = motor(PORT17, ratio36_1, false);
+motor LeftIntakeMotor = motor(PORT20, ratio18_1, true);
+motor RightIntakeMotor = motor(PORT11, ratio18_1, false);
+motor TilterMotor = motor(PORT17, ratio36_1, true);
 motor BarMotor = motor(PORT14, ratio36_1, true);
-//pot Poten = pot(Brain.ThreeWirePort.A);
+pot Poten = pot(Brain.ThreeWirePort.H);
 motor_group LeftSide = motor_group(LeftFrontMotor, LeftRearMotor);
 motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
 motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
@@ -87,7 +91,6 @@ extern void askPosition() {
 }
 
 extern void pre_auton(void) {
-  vexcodeInit();
   int xLastTouch = Brain.Screen.xPosition();
   int yLastTouch = Brain.Screen.yPosition();
   askMode();
@@ -187,21 +190,21 @@ extern void pre_auton(void) {
   }
 }
 
-// void deployStack() {
-//   TilterMotor.setBrake(brake);
-//   int error = 2000;
-//   int tilt_speed = 100;
-//   while(error > 100 && tilt_speed > 5) {
-//     error = 3800-Poten.value(rotationUnits::raw);
-//     tilt_speed = error * 100/1700;
-//     TilterMotor.spin(fwd, tilt_speed, pct);
-//   }
-//   wait(1, sec);
-//   Drivetrain.driveFor(directionType::rev, 6, inches);
-//   while(Poten.value > 1800) {
-//     TilterMotor.spin(directionType::rev, 100, pct);
-//   }
-// }
+void deployStack() {
+  TilterMotor.setBrake(brake);
+  double error = 2000;
+  double tilt_speed = 100;
+  while(error > 100 && tilt_speed > 5) {
+    error = std::abs(1470-Poten.angle(rotationUnits::raw));
+    tilt_speed = error/50;
+    TilterMotor.spin(fwd, tilt_speed, pct);
+  }
+  // wait(1, sec);
+  // Drivetrain.driveFor(directionType::rev, 6, inches);
+  // while(Poten.value(rotationUnits::raw) < 3700) {
+  //   TilterMotor.spin(directionType::rev, 100, pct);
+  // }
+}
 
 void turnRight(double deg) {
   double error = 100;
