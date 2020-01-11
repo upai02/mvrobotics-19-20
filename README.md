@@ -20,13 +20,18 @@ Includes normal competition template code and auton recorder/playback, both with
 * **1/11/2020**
    - Updated drivetrain to smartdrive with inertial integration
    - Synced changes between the programs
+   - Added new controller UI (https://dev.azure.com/roboVEX/_git/ACCESS_OS)
+   - Added all functions in from base programs (AccessOS)
 
 ## To-Do
 * ~~Add inertial sensor support (turning PID, drive PID)~~
-* Tweak potentiometer stacking P-loop
+* Tweak auto-stacking P-loop
 * Tweak turning PID commands
 * Test and fix auton code (CompTemp)
+* Test actual controller UI (AccessOS)
+* Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
 * Add/fix drive speed selector
 * Add PID loop for drivetrain
-* Fix/Remove GIF integration
+* Merge brain GUI and controller UI into 1 cohesive GUI (if possible)
+* Fix/remove GIF integration
