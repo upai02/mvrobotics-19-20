@@ -15,10 +15,15 @@ Includes normal competition template code and auton recorder/playback, both with
    - Added inertial sensor support
    - Added turning PID
    - Added custom PID class (https://github.com/tekdemo/MiniPID/blob/master/README.md)
+   
+* **1/11/2020**
+   - Updated drivetrain to smartdrive with inertial integration
+   - Synced changes between the programs
 
 ## To-Do
 * ~~Add inertial sensor support (turning PID, drive PID)~~
 * Tweak potentiometer stacking P-loop
+* Tweak turning PID commands
 * Test and fix auton code (CompTemp)
 * Fix saving issue (RecUI)
 * Add/fix drive speed selector
