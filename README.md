@@ -23,10 +23,10 @@ Includes normal competition template code and auton recorder/playback, both with
 
 ## To-Do
 * ~~Add inertial sensor support (turning PID, drive PID)~~
-* Tweak potentiometer stacking P-loop
+* Tweak auto-stacking P-loop
 * Tweak turning PID commands
 * Test and fix auton code (CompTemp)
 * Fix saving issue (RecUI)
 * Add/fix drive speed selector
 * Add PID loop for drivetrain
-* Fix/Remove GIF integration
+* Fix/remove GIF integration
