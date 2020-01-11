@@ -4,7 +4,7 @@
 #include <cmath>
 #include "MiniPID.h"
 
-using namespace vex;
+using namespace vex;  
 int driveSpeedFactor = 1;
 int auton = -1;
 int allSpeed = 100;
@@ -24,12 +24,12 @@ motor RightIntakeMotor = motor(PORT11, ratio18_1, false);
 motor TilterMotor = motor(PORT17, ratio36_1, true);
 motor BarMotor = motor(PORT14, ratio36_1, true);
 pot Poten = pot(Brain.ThreeWirePort.H);
+inertial Gyro = inertial(2);
 motor_group LeftSide = motor_group(LeftFrontMotor, LeftRearMotor);
 motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
 motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
-drivetrain Drivetrain = drivetrain(LeftSide, RightSide, 319.19, 355.59999999999997, 292.09999999999997, mm, 1.0);
+smartdrive Drivetrain = smartdrive(LeftSide, RightSide, Gyro, 319.19, 355.59999999999997, 292.09999999999997, mm, 1.0);
 controller Controller1;
-inertial Gyro = inertial(2);
 MiniPID tilt = MiniPID(1, 0, 0);
 
 extern void askPosition() {
@@ -175,7 +175,7 @@ void turnLeft(double deg) {
   }
 }
 
-void autoRFS() {
+void autoRBS() {
   // Drivetrain.driveFor(fwd, 6, inches);
   // Drivetrain.driveFor(directionType::rev, 6, inches, false);
   // flipOut();
@@ -195,7 +195,7 @@ void autoRFS() {
   Drivetrain.driveFor(directionType::rev, 12, inches);
 }
 
-void autoBFS() {
+void autoBBS() {
   Drivetrain.driveFor(fwd, 6, inches);
   Drivetrain.driveFor(directionType::rev, 6, inches, false);
   flipOut();
@@ -217,7 +217,7 @@ void autoBFS() {
   Drivetrain.driveFor(directionType::rev, 12, inches);
 }
 
-void autoRBS() {
+void autoRFS() {
   Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 16, inches);
   wait(100, msec);
@@ -225,7 +225,7 @@ void autoRBS() {
   flipOut();
 }
 
-void autoBBS() {
+void autoBFS() {
   Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 16, inches);
   wait(100, msec);
@@ -237,7 +237,7 @@ void autoSkills() {
   Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 16, inches);
   wait(100, msec);
-  Drivetrain.driveFor(fwd, 22, inches);
+  Drivetrain.driveFor(fwd, 22, inches); 
 }
 
 void autonomous(void) {
