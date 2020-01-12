@@ -22,13 +22,18 @@ Includes normal competition template code and auton recorder/playback, both with
    - Synced changes between the programs
    - Added new controller UI (https://dev.azure.com/roboVEX/_git/ACCESS_OS)
    - Added all functions in from base programs (AccessOS)
+   
+* **1/12/2020**
+   - Tweaked stacking P-loop
+   - Rewired ports (CompTemp)
 
 ## To-Do
 * ~~Add inertial sensor support (turning PID, drive PID)~~
-* Tweak auto-stacking P-loop
-* Tweak turning PID commands
+* ~~Tweak auto-stacking P-loop~~
+* Port changes between programs
+* Tweak/fix turning PID commands
 * Test and fix auton code (CompTemp)
-* Test actual controller UI (AccessOS)
+* Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
 * Add/fix drive speed selector
