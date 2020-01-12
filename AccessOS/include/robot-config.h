@@ -44,22 +44,22 @@ vex::pot Poten = vex::pot(Brain.ThreeWirePort.H);
 vex::inertial Gyro = vex::inertial(2);
 
 //Drive motors, groups, and drivetrain
-vex::motor RightFront = vex::motor(vex::PORT12, vex::gearSetting::ratio18_1, true);
-vex::motor RightRear = vex::motor(vex::PORT13, vex::gearSetting::ratio18_1, true);
-vex::motor LeftRear = vex::motor(vex::PORT18, vex::gearSetting::ratio18_1, false);
-vex::motor LeftFront = vex::motor(vex::PORT19, vex::gearSetting::ratio18_1, false);
+vex::motor RightFront = vex::motor(vex::PORT13, vex::gearSetting::ratio18_1, true);
+vex::motor RightRear = vex::motor(vex::PORT20, vex::gearSetting::ratio18_1, true);
+vex::motor LeftRear = vex::motor(vex::PORT19, vex::gearSetting::ratio18_1, false);
+vex::motor LeftFront = vex::motor(vex::PORT18, vex::gearSetting::ratio18_1, false);
 vex::motor_group LeftSide = vex::motor_group(LeftFront, LeftRear);
 vex::motor_group RightSide = vex::motor_group(RightFront, RightRear);
 vex::smartdrive Drivetrain = vex::smartdrive(LeftSide, RightSide, Gyro, 319.19, 355.59999999999997, 292.09999999999997, vex::mm, 1.0);
 
 //Intake motors, group
-vex::motor LeftIntake = vex::motor(vex::PORT20, vex::ratio18_1, true);
-vex::motor RightIntake = vex::motor(vex::PORT11, vex::ratio18_1, false);
+vex::motor LeftIntake = vex::motor(vex::PORT11, vex::ratio18_1, true);
+vex::motor RightIntake = vex::motor(vex::PORT12, vex::ratio18_1, false);
 vex::motor_group Intakes = vex::motor_group(LeftIntake, RightIntake);
 
 //Bar and tilter motors
 vex::motor Tilter = vex::motor(vex::PORT17, vex::ratio36_1, true);
-vex::motor Bar = vex::motor(vex::PORT14, vex::ratio36_1, true);
+vex::motor Bar = vex::motor(vex::PORT14, vex::ratio36_1, false);
 
 //Create object Compettition of the Competition class
 #ifndef COMPETITION_DEFINED

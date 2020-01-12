@@ -24,13 +24,13 @@ int driveMode = 0;
 competition Competition;
 brain Brain;
 motor RightFrontMotor = motor(PORT13, ratio18_1, true);
-motor RightRearMotor = motor(PORT12, ratio18_1, true);
+motor RightRearMotor = motor(PORT20, ratio18_1, true);
 motor LeftRearMotor = motor(PORT19, ratio18_1, false);
 motor LeftFrontMotor = motor(PORT18, ratio18_1, false);
-motor LeftIntakeMotor = motor(PORT20, ratio18_1, true);
-motor RightIntakeMotor = motor(PORT11, ratio18_1, false);
+motor LeftIntakeMotor = motor(PORT11, ratio18_1, true);
+motor RightIntakeMotor = motor(PORT12, ratio18_1, false);
 motor TilterMotor = motor(PORT17, ratio36_1, true);
-motor BarMotor = motor(PORT14, ratio36_1, true);
+motor BarMotor = motor(PORT14, ratio36_1, false);
 pot Poten = pot(Brain.ThreeWirePort.H);
 inertial Gyro = inertial(2);
 motor_group LeftSide = motor_group(LeftFrontMotor, LeftRearMotor);
@@ -279,7 +279,7 @@ void controls() {
     TilterMotor.stop(coast);
   }
 
-  if (Controller1.ButtonLeft.pressing()) {
+  if (Controller1.ButtonY.pressing()) {
     flipOut();
   }
 }
@@ -709,81 +709,85 @@ void usercontrol(void) {
   } else {
     while (1) {
       // Drive Commands
-    if (mode == 0) {
-      LeftSide.spin(directionType::fwd, ((Controller1.Axis3.value()*std::abs(Controller1.Axis3.value())/100)/driveSpeedFactor), velocityUnits::pct);
-      RightSide.spin(directionType::fwd, ((Controller1.Axis2.value()*std::abs(Controller1.Axis2.value())/100)/driveSpeedFactor), velocityUnits::pct);
-    } else if (mode == 1) {
-      LeftSide.spin(directionType::fwd, ((Controller1.Axis3.value()+Controller1.Axis1.value())/2)/driveSpeedFactor, velocityUnits::pct);
-      RightSide.spin(directionType::fwd, ((Controller1.Axis3.value()-Controller1.Axis1.value())/2)/driveSpeedFactor, velocityUnits::pct);
-    }
-    
-    // Tilter Commands
-    if (Controller1.ButtonL1.pressing()) {
-      // TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
-      deployStack();
-    } else if (Controller1.ButtonL2.pressing()) {
-      TilterMotor.spin(directionType::rev, 35, velocityUnits::pct);
-    } else {
-      TilterMotor.stop(brake);
-    }
-
-    // Intake Commands
-    if (Controller1.ButtonR1.pressing()) {
-      Intakes.spin(directionType::fwd, intake, velocityUnits::pct);
-    } else if (Controller1.ButtonR2.pressing()) {
-      Intakes.spin(directionType::rev, 50, velocityUnits::pct);
-    } else {
-      Intakes.stop(coast);
-    }
-
-    // Bar Commands
-    if (Controller1.ButtonUp.pressing()) {
-      BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
-      TilterMotor.spin(directionType::fwd, 32, pct);
-    } else if (Controller1.ButtonDown.pressing()) {
-      BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
-      TilterMotor.spin(directionType::rev, 32, pct);
-    } else {
-      BarMotor.stop(hold);
-    }
-
-    // Speed Control
-    // if (Controller1.ButtonA.pressing()) {
-    //   if (driveSpeedFactor == 1) {
-    //   driveSpeedFactor = 2;
-
-    //   driveSpeed = "Drive Speed Halved";
-    //   }
-    //   else if (driveSpeedFactor == 2) {
-    //   driveSpeedFactor = 1;
-    //   driveSpeed = "Drive Speed Normal";
-    //   }
-    //   wait(50, msec);
-    // }
-
-    // Drive Select
-    if (Controller1.ButtonX.pressing()) {
       if (mode == 0) {
-        mode = 1;
-        driveType = "Split Arcade Controls";
+        LeftSide.spin(directionType::fwd, ((Controller1.Axis3.value()*std::abs(Controller1.Axis3.value())/100)/driveSpeedFactor), velocityUnits::pct);
+        RightSide.spin(directionType::fwd, ((Controller1.Axis2.value()*std::abs(Controller1.Axis2.value())/100)/driveSpeedFactor), velocityUnits::pct);
       } else if (mode == 1) {
-        mode = 0;
-        driveType = "Tank Controls";
+        LeftSide.spin(directionType::fwd, ((Controller1.Axis3.value()+Controller1.Axis1.value())/2)/driveSpeedFactor, velocityUnits::pct);
+        RightSide.spin(directionType::fwd, ((Controller1.Axis3.value()-Controller1.Axis1.value())/2)/driveSpeedFactor, velocityUnits::pct);
       }
-      wait(50, msec);
-    }
+    
+      // Tilter Commands
+      if (Controller1.ButtonL1.pressing()) {
+        TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
+      } else if (Controller1.ButtonL2.pressing()) {
+        TilterMotor.spin(directionType::rev, 35, velocityUnits::pct);
+      } else {
+        TilterMotor.stop(brake);
+      }
 
-    if (Controller1.ButtonLeft.pressing()) {
-      flipOut();
-    }
+      // Intake Commands
+      if (Controller1.ButtonR1.pressing()) {
+        Intakes.spin(directionType::fwd, intake, velocityUnits::pct);
+      } else if (Controller1.ButtonR2.pressing()) {
+        Intakes.spin(directionType::rev, 50, velocityUnits::pct);
+      } else {
+        Intakes.stop(coast);
+      }
 
-    Controller1.Screen.clearScreen();
-    Controller1.Screen.setCursor(0, 0);
-    Controller1.Screen.print(driveType.c_str());
-    Controller1.Screen.newLine();
-    // Controller1.Screen.print(driveSpeed.c_str());
+      // Bar Commands
+      if (Controller1.ButtonUp.pressing()) {
+        BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
+        if (Poten.angle(rotationUnits::raw) > 2600) {
+          TilterMotor.spin(directionType::fwd, 33, pct);
+        }
+      } else if (Controller1.ButtonDown.pressing()) {
+        BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
+        TilterMotor.spin(directionType::rev, 30, pct);
+      } else {
+        BarMotor.stop(hold);
+      }
 
-    // wait(20, msec);
+      // Speed Control
+      // if (Controller1.ButtonA.pressing()) {
+      //   if (driveSpeedFactor == 1) {
+      //   driveSpeedFactor = 2;
+      //   driveSpeed = "Drive Speed Halved";
+      //   }
+      //   else if (driveSpeedFactor == 2) {
+      //   driveSpeedFactor = 1;
+      //   driveSpeed = "Drive Speed Normal";
+      //   }
+      //   wait(50, msec);
+      // }
+
+      // Drive Select
+      if (Controller1.ButtonX.pressing()) {
+        if (mode == 0) {
+          mode = 1;
+          driveType = "Split Arcade Controls";
+        } else if (mode == 1) {
+          mode = 0;
+          driveType = "Tank Controls";
+        }
+        wait(50, msec);
+      }
+
+      if (Controller1.ButtonA.pressing()) {
+        deployStack();
+      }
+
+      if (Controller1.ButtonY.pressing()) {
+        flipOut();
+      }
+
+      Controller1.Screen.clearScreen();
+      Controller1.Screen.setCursor(0, 0);
+      Controller1.Screen.print(driveType.c_str());
+      Controller1.Screen.newLine();
+      // Controller1.Screen.print(driveSpeed.c_str());
+
+      // wait(20, msec);
     }
   }
 }

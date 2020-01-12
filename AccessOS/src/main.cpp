@@ -128,8 +128,7 @@ Tilter.setBrake(vex::brake);
 void driverScore()
 {
 	if (Controller.ButtonL1.pressing()) {
-      // TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
-      deployStack();
+      Tilter.spin(vex::directionType::fwd, 35, vex::velocityUnits::pct);
     } else if (Controller.ButtonL2.pressing()) {
       Tilter.spin(vex::directionType::rev, 35, vex::velocityUnits::pct);
     } else {
@@ -148,10 +147,12 @@ void driverScore()
     // Bar Commands
     if (Controller.ButtonUp.pressing()) {
       Bar.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
-      Tilter.spin(vex::directionType::fwd, 32, vex::pct);
+      if (Poten.angle(vex::rotationUnits::raw) > 2600) {
+        Tilter.spin(vex::directionType::fwd, 33, vex::pct);
+      }
     } else if (Controller.ButtonDown.pressing()) {
       Bar.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-      Tilter.spin(vex::directionType::rev, 32, vex::pct);
+      Tilter.spin(vex::directionType::rev, 30, vex::pct);
     } else {
       Bar.stop(vex::hold);
     }
@@ -185,7 +186,11 @@ void driverScore()
 		  }
     }
 
-    if (Controller.ButtonLeft.pressing()) {
+    if (Controller.ButtonA.pressing()) {
+      deployStack();
+    }
+
+    if (Controller.ButtonY.pressing()) {
       flipOut();
     }
 
@@ -311,7 +316,7 @@ int main()
 		//Checks if current status changed. If it didn't, don't do anything. If it did, refresh statusHUD.
 		if (tempStatus != OS.currStatus())
 		{
-			OS.statusHUD();
+      OS.statusHUD();
 			tempStatus = OS.currStatus();
 		}
 		vex::task::sleep(175); //Sleep the task for a short amount of time to prevent wasted resources.
