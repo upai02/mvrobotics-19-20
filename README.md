@@ -26,13 +26,20 @@ Includes normal competition template code and auton recorder/playback, both with
 * **1/12/2020**
    - Tweaked stacking P-loop
    - Rewired ports (CompTemp)
+   
+* **1/22/2020 (post-Neuqua)**
+   - Functional back auton added
+   - Stacking P-loop fixed and tuned
+   - Turning PID fixed and tuned
+   - Synced changes between programs
+   - Flipout fixed
 
 ## To-Do
 * ~~Add inertial sensor support (turning PID, drive PID)~~
-* ~~Tweak auto-stacking P-loop~~
-* Port changes between programs
-* Tweak/fix turning PID commands
-* Test and fix auton code (CompTemp)
+* ~~Tune auto-stacking P-loop~~
+* ~~Sync changes between programs~~
+* ~~Tune/fix turning PID commands~~
+* ~~Test and fix auton code (CompTemp)~~
 * Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
