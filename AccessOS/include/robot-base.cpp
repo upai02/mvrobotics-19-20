@@ -68,8 +68,8 @@ public:
 
 	//Drive functions
 	void stop(bool coastOrBrake);
-	void tankDrive();
-	void RCDrive();
+	void tankDrive(double deadzone);
+	void RCDrive(double deadzone);
 	void MECDrive();
 	void timeOut(float timeout);
 	void resetDrive();
@@ -117,19 +117,19 @@ void ROBOT_BASE::stop(bool brake)
 /*------------------------------------------------------------------------------------------------------
 [STABLE - USER] tankDrive > Tank drive control system
 ------------------------------------------------------------------------------------------------------*/
-void ROBOT_BASE::tankDrive()
+void ROBOT_BASE::tankDrive(double deadzone)
 {	
-	LeftSide.spin(vex::directionType::fwd, ((Controller.Axis3.value()*abs(Controller.Axis3.value())/100)), vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, ((Controller.Axis2.value()*abs(Controller.Axis2.value())/100)), vex::velocityUnits::pct);
+	LeftSide.spin(vex::directionType::fwd, (Controller.Axis3.value() > deadzone || Controller.Axis3.value() < -deadzone) ? Controller.Axis3.value() : 0, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (Controller.Axis2.value() > deadzone || Controller.Axis2.value() < -deadzone) ? Controller.Axis2.value() : 0, vex::velocityUnits::pct);
 }
 
 /*------------------------------------------------------------------------------------------------------
 [STABLE - USER] RCDrive > RC-style drive control system
 ------------------------------------------------------------------------------------------------------*/
-void ROBOT_BASE::RCDrive()
+void ROBOT_BASE::RCDrive(double deadzone)
 {
-	LeftSide.spin(vex::directionType::fwd, ((Controller.Axis3.value()+Controller.Axis1.value())/2), vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, ((Controller.Axis3.value()-Controller.Axis1.value())/2), vex::velocityUnits::pct);
+	LeftSide.spin(vex::directionType::fwd, ((Controller.Axis3.value() > deadzone || Controller.Axis3.value() < -deadzone) ? Controller.Axis3.value() : 0) + ((Controller.Axis1.value() > deadzone || Controller.Axis1.value() < -deadzone) ? Controller.Axis1.value() : 0), vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, ((Controller.Axis3.value() > deadzone || Controller.Axis3.value() < -deadzone) ? Controller.Axis3.value() : 0) - ((Controller.Axis1.value() > deadzone || Controller.Axis1.value() < -deadzone) ? Controller.Axis1.value() : 0), vex::velocityUnits::pct);
 }
 
 /*------------------------------------------------------------------------------------------------------
@@ -156,5 +156,6 @@ void ROBOT_BASE::resetDrive()
 void ROBOT_BASE::reset()
 {
 	resetDrive();
-
+  Inertial.calibrate(2000);
+  vex::task::sleep(2000);
 }

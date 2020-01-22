@@ -88,7 +88,27 @@ void autonRotateTile(float x, double speed)
 }
 
 /*------------------------------------------------------------------------------------------------------
-[STABLE] flipOut > Flips out intake and tray on bot
+[STABLE] turn > Turns the bot a specified number of degrees (+ for right, - for left)
+------------------------------------------------------------------------------------------------------*/
+void turn(double degrees)
+{
+  double target = degrees;
+  double error = target - Inertial.rotation();
+  double kP = .5;
+  while (std::abs(error) > 1) 
+  {
+    error = target - Inertial.rotation();
+    double percent = kP * error + 10;
+    LeftSide.spin(vex::directionType::fwd, percent, vex::pct);
+	  RightSide.spin(vex::directionType::rev, percent, vex::pct);
+    vex::task::sleep(20);
+  }
+  LeftSide.stop();
+  RightSide.stop();
+}
+
+/*------------------------------------------------------------------------------------------------------
+[STABLE] flipOut > Flips out tray on bot
 ------------------------------------------------------------------------------------------------------*/
 void flipOut() 
 {
@@ -147,12 +167,12 @@ void driverScore()
     // Bar Commands
     if (Controller.ButtonUp.pressing()) {
       Bar.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
-      if (Poten.angle(vex::rotationUnits::raw) > 2600) {
-        Tilter.spin(vex::directionType::fwd, 33, vex::pct);
-      }
+      // if (Poten.angle(vex::rotationUnits::raw) > 2600) {
+      //   Tilter.spin(vex::directionType::fwd, 33, vex::pct);
+      // }
     } else if (Controller.ButtonDown.pressing()) {
       Bar.spin(vex::directionType::rev, 100, vex::velocityUnits::pct);
-      Tilter.spin(vex::directionType::rev, 30, vex::pct);
+      // Tilter.spin(vex::directionType::rev, 30, vex::pct);
     } else {
       Bar.stop(vex::hold);
     }
@@ -190,8 +210,12 @@ void driverScore()
       deployStack();
     }
 
-    if (Controller.ButtonY.pressing()) {
+    if (Controller.ButtonLeft.pressing()) {
       flipOut();
+    }
+
+    if (Controller.ButtonB.pressing()) {
+      Drivetrain.driveFor(vex::directionType::rev, 6, vex::distanceUnits::in);
     }
 
     // wait(20, msec);
@@ -220,26 +244,7 @@ void autonFrontRow() //BLUE SIDE - large zone
 ------------------------------------------------------------------------------------------------------*/
 void autonBackRow() //BLUE SIDE - small zone
 {
-  Drivetrain.setDriveVelocity(30, vex::percentUnits::pct);
-	Drivetrain.driveFor(vex::fwd, 6, vex::inches);
-  Drivetrain.driveFor(vex::directionType::rev, 6, vex::inches, false);
-  flipOut();
-  Drivetrain.driveFor(vex::fwd, 42.5, vex::inches, false);
-  while (Drivetrain.isMoving()) {
-    Intakes.spin(vex::fwd, 100, vex::pct);
-  }
-  Drivetrain.driveFor(vex::directionType::rev, 43, vex::inches);
-  Drivetrain.driveFor(vex::fwd, 6, vex::inches);
-  autonRotateTile(-1, 60);
-  Intakes.stop();
-  Drivetrain.driveFor(vex::fwd, 10, vex::inches);
-  Intakes.spinFor(vex::directionType::rev, 2, vex::rev);
-  Tilter.setVelocity(40, vex::pct);
-  wait(100, vex::msec);
-  deployStack();
-  wait(100, vex::msec);
-  Intakes.spinFor(vex::directionType::rev, 2, vex::rev, false);
-  Drivetrain.driveFor(vex::directionType::rev, 12, vex::inches);
+  //Add code for back row auton here
 }
 
 /*------------------------------------------------------------------------------------------------------
@@ -247,10 +252,7 @@ void autonBackRow() //BLUE SIDE - small zone
 ------------------------------------------------------------------------------------------------------*/
 void autonSkills()
 {
-	Drivetrain.setDriveVelocity(50, vex::pct);
-  Drivetrain.driveFor(vex::directionType::rev, 16, vex::inches);
-  wait(100, vex::msec);
-  Drivetrain.driveFor(vex::fwd, 22, vex::inches);
+	//Add code for skills auton here
 }
 
 /*------------------------------------------------------------------------------------------------------
@@ -258,7 +260,6 @@ void autonSkills()
 ------------------------------------------------------------------------------------------------------*/
 void autonomous(void)
 {
-  Gyro.calibrate(); //Calibrates inertial sensor
 	//If configuration[1] is 0 (Front row), 1 (Back row), or 2 (Skills), run the correct auton
 	if (OS.getValues(AUTON_TYPE) == FRONT) {
 		autonFrontRow();
@@ -286,10 +287,10 @@ void usercontrol(void)
 		switch (OS.getValues(AUTON_DRIVE))
 		{
 		case RC:
-			ROBOT.RCDrive();
+			ROBOT.RCDrive(17.5);
 			break;
 		case TANK:
-			ROBOT.tankDrive();
+			ROBOT.tankDrive(17.5);
 			break;
 		default:
 			break;
