@@ -34,16 +34,20 @@ Includes normal competition template code and auton recorder/playback, both with
    - Synced changes between programs
    - Flipout fixed
 
+* **1/31/2020**
+   - Experimental 7 point back auton added
+   - Experimental front auton modified
+   - Experimental drive speed selector added
+   - Experimental bar macro added
+
 ## To-Do
-* ~~Add inertial sensor support (turning PID, drive PID)~~
-* ~~Tune auto-stacking P-loop~~
-* ~~Sync changes between programs~~
-* ~~Tune/fix turning PID commands~~
-* ~~Test and fix auton code (CompTemp)~~
 * Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
-* Add/fix drive speed selector
+* Sync changes between programs
+* Tweak/fix bar macro
 * Add PID loop for drivetrain
 * Merge brain GUI and controller UI into 1 cohesive GUI (if possible)
 * Fix/remove GIF integration
+* ~~Test and fix auton code (CompTemp)~~
+* ~~Add/fix drive speed selector~~
