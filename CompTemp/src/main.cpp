@@ -5,13 +5,13 @@
 #include "MiniPID.h"
 
 using namespace vex;  
-int driveSpeedFactor = 1;
+double driveSpeedFactor = 1.25;
 int barPos = 0;
 int auton = -1;
 int allSpeed = 100;
 int intake = 100;
-int mode = 0;
-std::string driveType = "Tank Controls";
+int mode = 2;
+std::string driveType = "Hybrid Controls";
 std::string driveSpeed = "Drive Speed Normal"; 
 double degreesPerFoot = 340.0;
 double degreesTo360 = degreesPerFoot * 4;
@@ -129,10 +129,10 @@ extern void pre_auton(void) {
 
 void deployStack() {
   TilterMotor.setBrake(brake);
-  double error = 2000;
+  double error = 1770;
   double tilt_speed = 100;
   while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
-    error = std::abs(2000-Poten.angle(rotationUnits::raw));
+    error = std::abs(1770-Poten.angle(rotationUnits::raw));
     tilt_speed = error/17.5;
     TilterMotor.spin(fwd, tilt_speed, pct);
     if (tilt_speed < 5) {
@@ -156,8 +156,9 @@ void flipOut() {
   TilterMotor.setVelocity(100, pct);
   Intakes.setVelocity(100, pct);
   TilterMotor.spinFor(fwd, 450, rotationUnits::deg);
-  wait(50, msec);  
-  Intakes.spinFor(directionType::rev, 1.5, rotationUnits::rev);
+  wait(200, msec);  
+  Intakes.spinFor(directionType::rev, 0.5, rotationUnits::rev);
+  wait(200, msec);
   TilterMotor.spinFor(directionType::rev, 410, rotationUnits::deg);
   // BarMotor.spinFor(fwd, 900, deg);
   // TilterMotor.spinFor(fwd, 475, deg);
@@ -273,22 +274,87 @@ void moveBackwards(double feet, double speed){
 // }
 
 void drive_Tank(double deadzone){
-  LeftSide.spin(vex::directionType::fwd, ((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0)*driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, ((Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0)*driveSpeedFactor, vex::velocityUnits::pct);
+  LeftSide.spin(vex::directionType::fwd, ((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, ((Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0)/driveSpeedFactor, vex::velocityUnits::pct);
 }
 
 void drive_Arcade(double deadzone){
-  LeftSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) + ((Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0))*driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) - ((Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0))*driveSpeedFactor, vex::velocityUnits::pct);
+  LeftSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) + ((Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0))/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) - ((Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0))/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_Hybrid(double deadzone) {
+  LeftSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) - ((Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0))/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) + ((Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0))/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void spdToggle() {
+  if (driveSpeedFactor == 1) {
+    driveSpeedFactor = 2;
+    driveSpeed = "Drive Speed Halved";
+  } else if (driveSpeedFactor == 2) {
+    driveSpeedFactor = 1;
+    driveSpeed = "Drive Speed Normal";
+  }
+  wait(500, msec);
+}
+
+double vel(double distT, double distF) {
+  double num = sin(M_PI * ((distT-distF)/distF)) * 127 + 10;
+  return num;
+}
+
+void intToggle() {
+  while (intake) {
+    Intakes.spin(fwd, 100, pct);
+    if (Controller1.ButtonRight.pressing()) {
+      break;
+    }
+  }
+}
+
+void driveSelect() {
+  if (mode == 0) {
+    mode = 1;
+    driveType = "Split Arcade Controls";
+  } else if (mode == 1) {
+    mode = 2;
+    driveType = "Hybrid Controls";
+  } else if (mode == 2) {
+    mode = 0;
+    driveType = "Tank Controls";
+  }
+}
+
+void barMacro() {
+  if (barPos == 0) {
+    TilterMotor.spinFor(fwd, 250, deg, false);
+    BarMotor.spinFor(directionType::fwd, 500, rotationUnits::deg);
+    barPos = 1;
+  } else if (barPos == 1) {
+    BarMotor.spinFor(directionType::fwd, 250, rotationUnits::deg);
+    barPos = 2;
+  } else if (barPos == 2) {
+    BarMotor.spinFor(directionType::rev, 750, deg, false);
+    TilterMotor.spinFor(directionType::rev, 250, deg);
+    barPos = 0;
+  }
+}
+
+void fadeBack() {
+  Intakes.setVelocity(50, percentUnits::pct);
+  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
+  SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in);
 }
 
 void autoRBS() {
-  // Drivetrain.driveFor(fwd, 12, inches);
-  // Drivetrain.driveFor(directionType::rev, 12, inches, false);
-  // flipOut();
+  Drivetrain.driveFor(fwd, 10, inches);
+  Drivetrain.driveFor(directionType::rev, 10, inches, false);
+  flipOut();
   Drivetrain.setDriveVelocity(40, pct);
+  wait(50, msec);
   Intakes.spinFor(1.5, sec);
-  Drivetrain.driveFor(fwd, 43.5, inches, false);
+  Drivetrain.driveFor(fwd, 44.1, inches, false);
   while (Drivetrain.isMoving()) {
     Intakes.spin(fwd, 100, pct);
   }
@@ -296,29 +362,32 @@ void autoRBS() {
   // Drivetrain.driveFor(directionType::rev, 10.75, inches);
   // Intakes.stop();
   // Drivetrain.driveFor(directionType::rev, 24.75, inches);
-  Drivetrain.driveFor(directionType::rev, 43.5, inches);
+  Drivetrain.driveFor(directionType::rev, 23.5, inches);
   Intakes.stop();
   // Drivetrain.turnFor(63, rotationUnits::deg);
-  turnRight(114.5);
-  Drivetrain.driveFor(fwd, 9, inches);
-  Intakes.spinFor(directionType::rev, 0.625, rev);
+  turnRight(136);
+  Drivetrain.driveFor(fwd, 13.9, inches);
+  Intakes.setVelocity(50, percentUnits::pct);
+  Intakes.spinFor(directionType::rev, 0.5, rev);
   wait(100, msec);
   // deployStack();
-  TilterMotor.setVelocity(40, pct);
-  TilterMotor.spinFor(fwd, 585, deg);
+  TilterMotor.setVelocity(35, pct);
+  TilterMotor.spinFor(fwd, 555, deg);
   wait(50, msec);
   // TilterMotor.spinFor(directionType::rev, 10, deg);
-  Drivetrain.driveFor(fwd, 0.5, inches);
+  // Intakes.spinFor(directionType::rev, 0.25, rotationUnits::rev, 25, velocityUnits::pct);
+  Drivetrain.driveFor(fwd, 0.6, inches);
   Drivetrain.driveFor(directionType::rev, 12, inches);
 }
 
 void autoBBS() {
-  Drivetrain.driveFor(fwd, 12, inches);
-  Drivetrain.driveFor(directionType::rev, 12.5, inches, false);
+  Drivetrain.driveFor(fwd, 10, inches);
+  Drivetrain.driveFor(directionType::rev, 10, inches, false);
   flipOut();
   Drivetrain.setDriveVelocity(40, pct);
+  wait(50, msec);
   Intakes.spinFor(1.5, sec);
-  Drivetrain.driveFor(fwd, 45, inches, false);
+  Drivetrain.driveFor(fwd, 44.1, inches, false);
   while (Drivetrain.isMoving()) {
     Intakes.spin(fwd, 100, pct);
   }
@@ -326,56 +395,59 @@ void autoBBS() {
   // Drivetrain.driveFor(directionType::rev, 10.75, inches);
   // Intakes.stop();
   // Drivetrain.driveFor(directionType::rev, 24.75, inches);
-  Drivetrain.driveFor(directionType::rev, 43.5, inches);
+  Drivetrain.driveFor(directionType::rev, 23.5, inches);
   Intakes.stop();
   // Drivetrain.turnFor(63, rotationUnits::deg);
-  turnLeft(114.5);
-  Drivetrain.driveFor(fwd, 9, inches);
-  Intakes.spinFor(directionType::rev, 0.625, rev);
+  turnLeft(136);
+  Drivetrain.driveFor(fwd, 13.9, inches);
+  Intakes.setVelocity(50, percentUnits::pct);
+  Intakes.spinFor(directionType::rev, 0.5, rev);
   wait(100, msec);
   // deployStack();
-  TilterMotor.setVelocity(40, pct);
-  TilterMotor.spinFor(fwd, 585, deg);
+  TilterMotor.setVelocity(35, pct);
+  TilterMotor.spinFor(fwd, 530, deg);
   wait(50, msec);
   // TilterMotor.spinFor(directionType::rev, 10, deg);
-  Drivetrain.driveFor(fwd, 0.5, inches);
+  // Intakes.spinFor(directionType::rev, 0.25, rotationUnits::rev, 25, velocityUnits::pct);
+  Drivetrain.driveFor(fwd, 0.6, inches);
   Drivetrain.driveFor(directionType::rev, 12, inches);
 }
 
 void autoRFS() {
-  // Drivetrain.driveFor(fwd, 6, inches);
-  // Drivetrain.driveFor(directionType::rev, 6, inches, false);
-  // flipOut();
-  Drivetrain.driveFor(fwd, 42.5, inches, false);
-  while (Drivetrain.isMoving()) {
-    Intakes.spin(fwd, 100, pct);
-  }
-  Drivetrain.driveFor(directionType::rev, 23.4, inches);
+  Drivetrain.driveFor(fwd, 10, inches);
+  Drivetrain.driveFor(directionType::rev, 10, inches, false);
+  flipOut();
+  Drivetrain.driveFor(directionType::rev, 1, inches);
+  Intakes.setVelocity(100, percentUnits::pct);
+  Intakes.spinFor(0.75, sec);
+  Drivetrain.driveFor(fwd, 24.4, inches);
+  Drivetrain.driveFor(directionType::rev, 10.4, inches);
   turnLeft(90);
-  Drivetrain.driveFor(fwd, 23.4, inches, false);
-  while (Drivetrain.isMoving()) {
-    Intakes.spin(fwd, 100, pct);
-  }
-  turnLeft(135);
+  Drivetrain.driveFor(fwd, 18.4, inches);
+  turnLeft(125);
   Intakes.stop();
-  Drivetrain.driveFor(fwd, 6.5, inches);
-  Intakes.spinFor(directionType::rev, 1.5, rev);
+  Drivetrain.driveFor(fwd, 9, inches);
+  Intakes.spinFor(directionType::rev, 0.55, rev);
   wait(100, msec);
-  deployStack();
-  wait(200, msec);
-  Intakes.spinFor(directionType::rev, 2, rev, false);
+  // deployStack();
+  TilterMotor.setVelocity(35, pct);
+  TilterMotor.spinFor(fwd, 500, deg);
+  wait(100, msec);
+  // Intakes.spinFor(directionType::rev, 2, rev, false);
+  // Drivetrain.driveFor(directionType::rev, 12, inches);
+  Drivetrain.driveFor(fwd, 0.6, inches);
   Drivetrain.driveFor(directionType::rev, 12, inches);
 }
 
 void autoBFS() {
   Drivetrain.driveFor(fwd, 9, inches);
-  Drivetrain.driveFor(directionType::rev, 9.5, inches, false);
+  Drivetrain.driveFor(directionType::rev, 9, inches, false);
   flipOut();
-  Drivetrain.driveFor(fwd, 36.5, inches, false);
+  Drivetrain.driveFor(fwd, 23.4, inches, false);
   while (Drivetrain.isMoving()) {
     Intakes.spin(fwd, 100, pct);
   }
-  Drivetrain.driveFor(directionType::rev, 23.4, inches);
+  Drivetrain.driveFor(directionType::rev, 13.4, inches);
   turnRight(90);
   Drivetrain.driveFor(fwd, 23.4, inches, false);
   while (Drivetrain.isMoving()) {
@@ -398,8 +470,8 @@ void autoSkills() {
   // wait(100, msec);
   // Drivetrain.driveFor(fwd, 22, inches); 
   // flipOut();
-  Drivetrain.driveFor(fwd, 12, inches);
-  Drivetrain.driveFor(directionType::rev, 12, inches, false);
+  // Drivetrain.driveFor(fwd, 12, inches);
+  // Drivetrain.driveFor(directionType::rev, 12, inches, false);
   flipOut();
 }
 
@@ -456,36 +528,11 @@ void autonomous(void) {
   } else if (auton == 4) {
     Controller1.Screen.clearScreen();
     Controller1.Screen.print("Running Skills");
-    autoExp();
+    autoSkills();
   } else {
     // Doesn't run Auton
     Controller1.Screen.clearScreen();
     Controller1.Screen.print("No Auton Running");
-  }
-}
-
-void spdToggle() {
-  if (driveSpeedFactor == 1) {
-    driveSpeedFactor = 2;
-    driveSpeed = "Drive Speed Halved";
-  } else if (driveSpeedFactor == 2) {
-    driveSpeedFactor = 1;
-    driveSpeed = "Drive Speed Normal";
-  }
-  wait(500, msec);
-}
-
-double vel(double distT, double distF) {
-  double num = sin(M_PI * ((distT-distF)/distF)) * 127 + 10;
-  return num;
-}
-
-void intToggle() {
-  while (intake) {
-    Intakes.spin(fwd, 100, pct);
-    if (Controller1.ButtonRight.pressing()) {
-      break;
-    }
   }
 }
 
@@ -496,17 +543,26 @@ void usercontrol(void) {
   BarMotor.setStopping(hold);
   TilterMotor.setStopping(brake);
   BarMotor.resetRotation();
+  Controller1.ButtonY.pressed(spdToggle);
+  Controller1.ButtonX.pressed(driveSelect);
+  // Controller1.ButtonLeft.pressed(fadeBack);
   while (1) {
     // Drive Commands
     if (mode == 0) {
       drive_Tank(17.5);
     } else if (mode == 1) {
       drive_Arcade(17.5);
+    } else if (mode == 2) {
+      drive_Hybrid(17.5);
     }
     
     // Tilter Commands
     if (Controller1.ButtonL1.pressing()) {
-      TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
+      if (Poten.angle(rotationUnits::raw) < 2000) {
+        TilterMotor.spin(directionType::fwd, 25, velocityUnits::pct);
+      } else {
+        TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
+      }
     } else if (Controller1.ButtonL2.pressing()) {
       TilterMotor.spin(directionType::rev, 35, velocityUnits::pct);
     } else {
@@ -525,37 +581,20 @@ void usercontrol(void) {
     // Bar Commands
     if (Controller1.ButtonUp.pressing()) {
       BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
-      if (Poten.angle(rotationUnits::raw) > 3065) {
+      if (Poten.angle(rotationUnits::raw) > 2975) {
         TilterMotor.spin(directionType::fwd, 35.25, pct);
       }
     } else if (Controller1.ButtonDown.pressing()) {
       BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
       while (!(BarMotor.rotation(rotationUnits::deg) > 0)) {
         TilterMotor.spin(directionType::rev, 45, pct); 
-        if (Poten.angle(rotationUnits::raw) < 3500) {
+        if (Poten.angle(rotationUnits::raw) > 3500) {
           break;
         }
       }
       TilterMotor.stop();
     } else {
       BarMotor.stop(hold);
-    }
-
-    // Speed Control
-    if (Controller1.ButtonY.pressing()) {
-      spdToggle();
-    }
-
-    // Drive Select
-    if (Controller1.ButtonX.pressing()) {
-      if (mode == 0) {
-        mode = 1;
-        driveType = "Split Arcade Controls";
-      } else if (mode == 1) {
-        mode = 0;
-        driveType = "Tank Controls";
-      }
-      wait(50, msec);
     }
 
     if (Controller1.ButtonA.pressing()) {
@@ -566,27 +605,16 @@ void usercontrol(void) {
       SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in, false);
     }
 
-    if (Controller1.ButtonLeft.pressing()) {
+    if (Controller1.ButtonRight.pressing()) {
       flipOut();
-      // Bar Macro
-      // if (barPos == 0) {
-      //   TilterMotor.spinFor(fwd, 250, deg, false);
-      //   BarMotor.spinFor(directionType::fwd, 500, rotationUnits::deg);
-      //   barPos = 1;
-      // } else if (barPos == 1) {
-      //   BarMotor.spinFor(directionType::fwd, 250, rotationUnits::deg);
-      //   barPos = 2;
-      // } else if (barPos == 2) {
-      //   BarMotor.spinFor(directionType::rev, 750, deg, false);
-      //   TilterMotor.spinFor(directionType::rev, 250, deg);
-      //   barPos = 0;
-      // }
+      // barMacro();
     }
 
-    if (Controller1.ButtonLeft.pressing()) {
-      Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
-      SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in);
-    }
+    // if (Controller1.ButtonLeft.pressing()) {
+    //   Intakes.setVelocity(50, percentUnits::pct);
+    //   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
+    //   SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in);
+    // }
 
     Controller1.Screen.clearScreen();
     Controller1.Screen.setCursor(0, 0);
