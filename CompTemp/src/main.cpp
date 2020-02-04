@@ -172,19 +172,42 @@ void flipOut() {
 }
 
 // void turn(double degrees) {
-//   double target = degrees;
-//   double error = target - Inertial.rotation();
-//   double kP = .5;
-//   while (std::abs(error) > 1) 
-//   {
-//     error = target - Inertial.rotation();
-//     double percent = kP * error + 10;
-//     LeftSide.spin(directionType::fwd, percent, pct);
-// 	  RightSide.spin(directionType::rev, percent, pct);
-//     vex::task::sleep(20);
+//   if (Inertial.installed()) {
+//     double target = degrees;
+//     double error = target - Inertial.rotation();
+//     double kP = .5;
+//     if (error > 0) {
+//       while (std::abs(error) > 1) {
+//         error = target - Inertial.rotation();
+//         double percent = kP * error + 15;
+//         LeftSide.spin(directionType::fwd, percent, pct);
+// 	      RightSide.spin(directionType::rev, percent, pct);
+//         vex::task::sleep(20);
+//       }
+//     } else if (error > 0) {
+//       double target = degrees; 
+//       double error = target - Inertial.rotation();
+//       double kP = .5;
+//       while (std::abs(error) > 1) {
+//         error = target - Inertial.rotation();
+//         double percent = kP * error - 15;
+//         LeftSide.spin(directionType::fwd, percent, pct);
+// 	      RightSide.spin(directionType::rev, percent, pct);
+//         vex::task::sleep(20);
+//       }
+//     } else {
+//       LeftSide.stop();
+//       RightSide.stop();
+//       goto end;
+//     }
+//   } else {
+//     Brain.Screen.clearScreen();
+//     Brain.Screen.setFont(fontType::mono40);
+//     Brain.Screen.setFillColor(red);
+//     Brain.Screen.print("No Inertial Sensor Installed");
 //   }
-//   LeftSide.stop();
-//   RightSide.stop();
+//   end:
+//   vex::task::sleep(10);
 // }
 
 void turnLeft(double deg) {
@@ -258,7 +281,6 @@ void moveBackwards(double feet, double speed){
 
 // void turnLeft(double ang, double speed){
 //     double degrees = (ang / 360) * degreesTo360;
-
 //     LeftFrontMotor.startRotateTo(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
 //     RightFrontMotor.startRotateTo(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
 //     LeftRearMotor.startRotateTo(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
@@ -289,11 +311,11 @@ void drive_Hybrid(double deadzone) {
 }
 
 void spdToggle() {
-  if (driveSpeedFactor == 1) {
-    driveSpeedFactor = 2;
+  if (driveSpeedFactor == 1.25) {
+    driveSpeedFactor = 2.5;
     driveSpeed = "Drive Speed Halved";
-  } else if (driveSpeedFactor == 2) {
-    driveSpeedFactor = 1;
+  } else if (driveSpeedFactor == 2.5) {
+    driveSpeedFactor = 1.25;
     driveSpeed = "Drive Speed Normal";
   }
   wait(500, msec);
@@ -302,15 +324,6 @@ void spdToggle() {
 double vel(double distT, double distF) {
   double num = sin(M_PI * ((distT-distF)/distF)) * 127 + 10;
   return num;
-}
-
-void intToggle() {
-  while (intake) {
-    Intakes.spin(fwd, 100, pct);
-    if (Controller1.ButtonRight.pressing()) {
-      break;
-    }
-  }
 }
 
 void driveSelect() {
@@ -530,7 +543,6 @@ void autonomous(void) {
     Controller1.Screen.print("Running Skills");
     autoSkills();
   } else {
-    // Doesn't run Auton
     Controller1.Screen.clearScreen();
     Controller1.Screen.print("No Auton Running");
   }
@@ -545,7 +557,7 @@ void usercontrol(void) {
   BarMotor.resetRotation();
   Controller1.ButtonY.pressed(spdToggle);
   Controller1.ButtonX.pressed(driveSelect);
-  // Controller1.ButtonLeft.pressed(fadeBack);
+  Controller1.ButtonLeft.pressed(fadeBack);
   while (1) {
     // Drive Commands
     if (mode == 0) {
@@ -609,12 +621,6 @@ void usercontrol(void) {
       flipOut();
       // barMacro();
     }
-
-    // if (Controller1.ButtonLeft.pressing()) {
-    //   Intakes.setVelocity(50, percentUnits::pct);
-    //   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
-    //   SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in);
-    // }
 
     Controller1.Screen.clearScreen();
     Controller1.Screen.setCursor(0, 0);
