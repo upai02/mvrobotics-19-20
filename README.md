@@ -53,6 +53,7 @@ Includes normal competition template code and auton recorder/playback, both with
 * Tweak fadeback code
 * Figure out exponentially scaling drive
 * Sync changes between programs
+* Figure out better file system for easier navigation (CompTemp and RecUI)
 * Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
