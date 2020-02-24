@@ -129,11 +129,11 @@ extern void pre_auton(void) {
 
 void deployStack() {
   TilterMotor.setBrake(brake);
-  double error = 1770;
+  double error = 2050;
   double tilt_speed = 100;
   while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
-    error = std::abs(1770-Poten.angle(rotationUnits::raw));
-    tilt_speed = error/17.5;
+    error = std::abs(2050-Poten.angle(rotationUnits::raw));
+    tilt_speed = error/15;
     TilterMotor.spin(fwd, tilt_speed, pct);
     if (tilt_speed < 5) {
       break;
@@ -577,14 +577,14 @@ void usercontrol(void) {
     
     // Tilter Commands
     if (Controller1.ButtonL1.pressing()) {
-      if (Poten.angle(rotationUnits::raw) < 2000) {
+      if (Poten.angle(rotationUnits::raw) > 1750) {
         TilterMotor.spin(directionType::fwd, 25, velocityUnits::pct);
       } else {
         TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
       }
     } else if (Controller1.ButtonL2.pressing()) {
-      if (Poten.angle() < 3390) {
-        TilterMotor.spin(directionType::rev, 55, velocityUnits::pct);
+      if (Poten.angle(rotationUnits::raw) > 515) {
+        TilterMotor.spin(directionType::rev, 50, velocityUnits::pct);
       }
     } else {
       TilterMotor.stop(hold);
@@ -602,14 +602,14 @@ void usercontrol(void) {
     // Bar Commands
     if (Controller1.ButtonUp.pressing()) {
       BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
-      if (Poten.angle(rotationUnits::raw) > 3000) {
+      if (Poten.angle(rotationUnits::raw) < 950) {
         TilterMotor.spin(directionType::fwd, 35.25, pct);
       }
     } else if (Controller1.ButtonDown.pressing()) {
       BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
-      while (!(BarMotor.rotation(rotationUnits::deg) > 0)) {
+      while (!(BarMotor.rotation(rotationUnits::deg) > 10)) {
         TilterMotor.spin(directionType::rev, 35.25, pct); 
-        if (Poten.angle(rotationUnits::raw) > 3000) {
+        if (Poten.angle(rotationUnits::raw) < 550) {
           break;
         }
       }
