@@ -34,7 +34,7 @@ motor_group Intakes = motor_group(LeftIntakeMotor, RightIntakeMotor);
 drivetrain Drivetrain = drivetrain(LeftSide, RightSide, 12.56, 13, 9.5, distanceUnits::in, 1.0);
 smartdrive SmartDrive = smartdrive(LeftSide, RightSide, Inertial, 12.56, 13, 9.5, distanceUnits::in, 1.0);
 controller Controller1;
-MiniPID tilt = MiniPID(1, 0, 0);
+MiniPID d = MiniPID(0.33, 0.0005, 0.2);
 
 extern void askPosition() {
   Brain.Screen.clearScreen();
@@ -263,6 +263,57 @@ void drive(double inches, double intRot){
   Intakes.stop();
 }
 
+double signnum_c(double x) {
+  if (x > 0.0) return 1.0;
+  if (x < 0.0) return -1.0;
+  return x;
+}
+
+// void drivePID(double target, int intake = 0, bool reset = false) {
+//   double deg = target * (degreesPerFoot/12);
+//   double error = deg; //SensorValue - DesiredValue : Position
+//   double prevError = 0; //Position 20 miliseconds ago
+//   double derivative; // error - prevError : Speed
+//   double integral = 0; //totalError = totalError + error
+//   double maxInt = 300;
+//   double intBound = 3;
+//   double kP = 0.0;
+//   double kI = 0.0;
+//   double kD = 0.0;
+  
+//   if (reset) {
+//     LeftSide.setPosition(0, degrees);
+//     RightSide.setPosition(0, degrees);
+//   }
+
+//   if (intake != 0) {
+//     Intakes.spin(fwd, intake, pct);
+//   }
+
+//   while (error > 10) {
+//     double avg = (LeftSide.position(degrees)+RightSide.position(degrees))/2;
+
+//     error = avg - deg;
+//     derivative = error - prevError;
+    
+//     if(std::abs(error) < intBound){
+//       integral += error; 
+//     } else {
+//       integral = 0; 
+//     }
+    
+//     integral = std::abs(integral) > maxInt ? signnum_c(integral) * maxInt : integral;
+    
+//     double pow = error * kP + derivative * kD + integral + kI;
+
+//     LeftSide.spin(fwd, pow, volt);
+//     RightSide.spin(fwd, pow, volt);
+
+//     prevError = error;
+//     vex::task::sleep(20);
+//   }
+// }
+
 void moveForward(double feet, double speed){
     double degrees = feet * degreesPerFoot;
     RightFrontMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
@@ -279,6 +330,38 @@ void moveBackwards(double feet, double speed){
     LeftRearMotor.rotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
 }
 
+void moveFwd(double target, double intake = 0) {
+  d.setOutputLimits(100);
+  double lpow = 100;
+  double rpow = 100;
+  Intakes.spin(fwd, intake, pct);
+  while (lpow > 5 && rpow > 5) {
+    lpow = d.getOutput(LeftSide.position(degrees), target);
+    rpow = d.getOutput(RightSide.position(degrees), target);
+    LeftSide.spin(fwd, lpow, pct);
+    RightSide.spin(fwd, lpow, pct);
+  }
+  LeftSide.stop(brake);
+  RightSide.stop(brake);
+  Intakes.stop(coast);
+}
+
+void moveRev(double target, double intake = 0) {
+  d.setOutputLimits(100);
+  double lpow = 100;
+  double rpow = 100;
+  Intakes.spin(fwd, intake, pct);
+  while (lpow > 5 && rpow > 5) {
+    lpow = d.getOutput(LeftSide.position(degrees), target);
+    rpow = d.getOutput(RightSide.position(degrees), target);
+    LeftSide.spin(directionType::rev, lpow, pct);
+    RightSide.spin(directionType::rev, lpow, pct);
+  }
+  LeftSide.stop(brake);
+  RightSide.stop(brake);
+  Intakes.stop(coast);
+}
+
 // void turnLeft(double ang, double speed){
 //     double degrees = (ang / 360) * degreesTo360;
 //     LeftFrontMotor.startRotateTo(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
@@ -293,6 +376,65 @@ void moveBackwards(double feet, double speed){
 //     RightFrontMotor.startRotateTo(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
 //     LeftRearMotor.startRotateTo(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
 //     RightRearMotor.rotateTo(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
+// }
+
+// void drivePID(double target) {
+//   target *= 360 / (3.25 * M_PI);
+//   LeftSide.resetRotation();
+//   RightSide.resetRotation();
+
+//   double kp = 0.33;
+//   double ki = 0.0005;
+//   double kd = 0.2;
+
+//   double proportion;
+//   double integralRaw;
+//   double integral;
+//   double integralActiveZone = 360 / (3.25 * M_PI);
+//   double integralPowerLimit = 50 / ki;
+//   double derivative;
+//   double finalPower;
+
+//   double error = target;
+//   double lastError = target;
+//   sleep(50);
+//   while(std::abs(error) > 75){
+//     error = target - LeftSide.rotation(rotationUnits::deg);
+//     if(error == 0){
+//       break;
+//     }
+//     proportion = kp * error;
+    
+//     if(std::abs(error) < integralActiveZone && error != 0){
+//       integralRaw += error;
+//     } else integralRaw = 0.0;
+    
+//     if(integralRaw > integralPowerLimit){
+//       integralRaw = integralPowerLimit;
+//     }
+//     if(integralRaw < -integralPowerLimit){
+//       integralRaw = integralPowerLimit;
+//     }
+    
+//     integral = ki * integralRaw;
+    
+//     derivative = kd * (error - lastError);
+//     lastError = error;
+    
+//     if(error == 0){
+//       derivative = 0;
+//     }
+//     finalPower = 0.5 * (proportion + integral + derivative);
+
+//     if(finalPower > 100) {
+//       finalPower = 100;
+//     }
+//     LeftSide.spin(fwd, finalPower, pct);
+//     LeftSide.spin(fwd, finalPower, pct);
+//     sleep(20);
+//   }
+//   LeftSide.stop(brakeType::coast);
+//   RightSide.stop(brakeType::coast);
 // }
 
 void drive_Tank(double deadzone){
@@ -357,7 +499,7 @@ void barMacro() {
 
 void fadeBack() {
   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
-  SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in);
+  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in);
 }
 
 void autoRBS() {
@@ -371,14 +513,14 @@ void autoRBS() {
   // while (Drivetrain.isMoving()) {
   //   Intakes.spin(fwd, 100, pct);
   // }
-  Drivetrain.setDriveVelocity(45, pct);
+  Drivetrain.setDriveVelocity(50, pct);
   // Drivetrain.driveFor(directionType::rev, 10.75, inches);
   // Intakes.stop();
   // Drivetrain.driveFor(directionType::rev, 24.75, inches);
   Drivetrain.driveFor(directionType::rev, 24.5, inches);
   Intakes.stop();
   // Drivetrain.turnFor(63, rotationUnits::deg);
-  turnRight(128.55);
+  turnLeft(128.55);
   Drivetrain.driveFor(fwd, 15.4, inches);
   Intakes.setVelocity(50, percentUnits::pct);
   Intakes.spinFor(directionType::rev, 0.725, rev);
@@ -404,7 +546,7 @@ void autoBBS() {
   // while (Drivetrain.isMoving()) {
   //   Intakes.spin(fwd, 100, pct);
   // }
-  Drivetrain.setDriveVelocity(45, pct);
+  Drivetrain.setDriveVelocity(50, pct);
   // Drivetrain.driveFor(directionType::rev, 10.75, inches);
   // Intakes.stop();
   // Drivetrain.driveFor(directionType::rev, 24.75, inches);
