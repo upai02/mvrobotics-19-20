@@ -129,10 +129,10 @@ extern void pre_auton(void) {
 
 void deployStack() {
   TilterMotor.setBrake(brake);
-  double error = 2050;
+  double error = 2075;
   double tilt_speed = 100;
   while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
-    error = std::abs(2050-Poten.angle(rotationUnits::raw));
+    error = std::abs(2075-Poten.angle(rotationUnits::raw));
     tilt_speed = error/15;
     TilterMotor.spin(fwd, tilt_speed, pct);
     if (tilt_speed < 5) {
@@ -155,11 +155,11 @@ void deployStack() {
 void flipOut() {
   TilterMotor.setVelocity(100, pct);
   Intakes.setVelocity(100, pct);
-  TilterMotor.spinFor(fwd, 445, rotationUnits::deg);
+  TilterMotor.spinFor(fwd, 400, rotationUnits::deg);
   wait(200, msec);  
   Intakes.spinFor(directionType::rev, 1.2575, rotationUnits::rev);
-  wait(200, msec);
-  TilterMotor.spinFor(directionType::rev, 340, rotationUnits::deg);
+  wait(100, msec);
+  TilterMotor.spinFor(directionType::rev, 295, rotationUnits::deg);
   // BarMotor.spinFor(fwd, 900, deg);
   // TilterMotor.spinFor(fwd, 475, deg);
   // BarMotor.spinFor(directionType::rev, 900, deg);
@@ -212,15 +212,20 @@ void flipOut() {
 
 void turnLeft(double deg) {
   double error = 100;
+  double derivative = 0;
+  double prevError = 0;
   double kP = 0.5;
+  double kD = 0;
   double speed = 0;
   double ang = -1*deg;
   if (ang >= -180) {
     while (Inertial.rotation() > ang) {
       error = std::abs(ang - Inertial.rotation());
-      speed = error*kP;
+      derivative = error - prevError;
+      speed = error*kP + derivative*kD;
       RightSide.spin(fwd, speed, pct);
       LeftSide.spin(directionType::rev, speed, pct);
+      prevError = error;
       if (error < 5) {
         break;
       }
@@ -232,15 +237,20 @@ void turnLeft(double deg) {
 
 void turnRight(double deg) {
   double error = 100;
+  double derivative = 0;
+  double prevError = 0;
   double kP = 0.5;
+  double kD = 0;
   double speed = 0;
   double ang = deg;
   if (ang <= 180) {
     while (Inertial.rotation() < ang) {
       error = std::abs(ang - Inertial.rotation());
-      speed = error*kP;
+      derivative = error - prevError;
+      speed = error*kP + derivative*kD;
       RightSide.spin(directionType::rev, speed, pct);
       LeftSide.spin(fwd, speed, pct);
+      prevError = error;
       if (error < 5) {
         break;
       }
@@ -332,12 +342,13 @@ void moveBackwards(double feet, double speed){
 
 void moveFwd(double target, double intake = 0) {
   d.setOutputLimits(100);
+  double t = target * (degreesPerFoot/12);
   double lpow = 100;
   double rpow = 100;
   Intakes.spin(fwd, intake, pct);
   while (lpow > 5 && rpow > 5) {
-    lpow = d.getOutput(LeftSide.position(degrees), target);
-    rpow = d.getOutput(RightSide.position(degrees), target);
+    lpow = d.getOutput(LeftSide.position(degrees), t);
+    rpow = d.getOutput(RightSide.position(degrees), t);
     LeftSide.spin(fwd, lpow, pct);
     RightSide.spin(fwd, lpow, pct);
   }
@@ -348,12 +359,13 @@ void moveFwd(double target, double intake = 0) {
 
 void moveRev(double target, double intake = 0) {
   d.setOutputLimits(100);
+  double t = target * (degreesPerFoot/12);
   double lpow = 100;
   double rpow = 100;
   Intakes.spin(fwd, intake, pct);
   while (lpow > 5 && rpow > 5) {
-    lpow = d.getOutput(LeftSide.position(degrees), target);
-    rpow = d.getOutput(RightSide.position(degrees), target);
+    lpow = d.getOutput(LeftSide.position(degrees), t);
+    rpow = d.getOutput(RightSide.position(degrees), t);
     LeftSide.spin(directionType::rev, lpow, pct);
     RightSide.spin(directionType::rev, lpow, pct);
   }
@@ -520,7 +532,7 @@ void autoRBS() {
   Drivetrain.driveFor(directionType::rev, 24.5, inches);
   Intakes.stop();
   // Drivetrain.turnFor(63, rotationUnits::deg);
-  turnLeft(128.55);
+  turnRight(128.55);
   Drivetrain.driveFor(fwd, 15.4, inches);
   Intakes.setVelocity(50, percentUnits::pct);
   Intakes.spinFor(directionType::rev, 0.725, rev);
@@ -536,8 +548,8 @@ void autoRBS() {
 }
 
 void autoBBS() {
-  Drivetrain.driveFor(fwd, 8, inches);
-  Drivetrain.driveFor(directionType::rev, 8, inches, false);
+  Drivetrain.driveFor(fwd, 9, inches);
+  Drivetrain.driveFor(directionType::rev, 9, inches, false);
   flipOut();
   Intakes.setVelocity(100, pct);
   Drivetrain.setDriveVelocity(40, pct);
@@ -553,7 +565,7 @@ void autoBBS() {
   Drivetrain.driveFor(directionType::rev, 24.5, inches);
   Intakes.stop();
   // Drivetrain.turnFor(63, rotationUnits::deg);
-  turnRight(128.575);
+  turnLeft(128.575);
   Drivetrain.driveFor(fwd, 15.4, inches);
   Intakes.setVelocity(50, percentUnits::pct);
   Intakes.spinFor(directionType::rev, 0.725, rev);
@@ -629,6 +641,7 @@ void autoSkills() {
   // Drivetrain.driveFor(fwd, 12, inches);
   // Drivetrain.driveFor(directionType::rev, 12, inches, false);
   flipOut();
+  moveFwd(10, 100);
 }
 
 void autoExp() {
