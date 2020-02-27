@@ -46,16 +46,16 @@ Includes normal competition template code and auton recorder/playback, both with
    - Added hybrid drive code and working drive speed selector
    - Synced changes between CompTemp and RecUI
    
-* **2/25/2020**
+* **2/26/2020**
    - Implemented experimental drive PID
    - Fixed up autostack P-loop
    - Removed GIF integration
+   - Added experimental slew rate and exponential scaling to drive 
 
 ## To-Do
 * Test and fix auton code (CompTemp)
 * Tweak bar macro
 * Tweak fadeback code
-* Add slew rate/exponentially scaling drive
 * Sync changes between programs
 * Set up better file system for easier navigation (CompTemp and RecUI)
 * Fix controller UI (AccessOS)
