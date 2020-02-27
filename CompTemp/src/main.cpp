@@ -279,6 +279,27 @@ double signnum_c(double x) {
   return x;
 }
 
+double slew(double target, motor_group iSide) {
+  int acc_rate = 15;
+  int dec_rate = 15;
+  double speed = 0;
+
+  if (target != iSide.velocity(pct)) {
+    if (iSide.velocity(pct) < target) {
+      speed = iSide.velocity(pct) + acc_rate;
+      if (iSide.velocity(pct) > target) {
+        speed = target;
+      }
+    } if (iSide.velocity(pct) > target) {
+      speed = iSide.velocity(pct) - dec_rate;
+      if (iSide.velocity(pct) < target) {
+        speed = target;
+      }
+    }
+  }
+  return speed;
+}
+
 // void drivePID(double target, int intake = 0, bool reset = false) {
 //   double deg = target * (degreesPerFoot/12);
 //   double error = deg; //SensorValue - DesiredValue : Position
@@ -464,6 +485,21 @@ void drive_Hybrid(double deadzone) {
   RightSide.spin(vex::directionType::fwd, (((Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0) + ((Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0))/driveSpeedFactor, vex::velocityUnits::pct);
 }
 
+void drive_TankExpSlew(){
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis3.value(), 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis2.value(), 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_ArcadeExpSlew(){
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis3.value() + Controller1.Axis1.value(), 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis3.value() - Controller1.Axis1.value(), 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_HybridExpSlew() {
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis3.value() - Controller1.Axis2.value(), 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(Controller1.Axis3.value() + Controller1.Axis2.value(), 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
 void spdToggle() {
   if (driveSpeedFactor == 1.25) {
     driveSpeedFactor = 2.5;
@@ -509,7 +545,7 @@ void barMacro() {
   }
 }
 
-void fadeBack() {
+void fadeAway() {
   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
   Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in);
 }
@@ -718,16 +754,21 @@ void usercontrol(void) {
   BarMotor.resetRotation();
   Controller1.ButtonY.pressed(spdToggle);
   Controller1.ButtonX.pressed(driveSelect);
-  Controller1.ButtonLeft.pressed(fadeBack);
+  Controller1.ButtonLeft.pressed(fadeAway);
   Controller1.ButtonB.pressed(back);
+  Controller1.ButtonA.pressed(deployStack);
+  Controller1.ButtonRight.pressed(flipOut);
   while (1) {
     // Drive Commands
     if (mode == 0) {
-      drive_Tank(17.5);
+      //drive_Tank(17.5);
+      drive_TankExpSlew();
     } else if (mode == 1) {
-      drive_Arcade(17.5);
+      //drive_Arcade(17.5);
+      drive_ArcadeExpSlew();
     } else if (mode == 2) {
-      drive_Hybrid(17.5);
+      //drive_Hybrid(17.5);
+      drive_HybridExpSlew();
     }
     
     // Tilter Commands
@@ -773,14 +814,10 @@ void usercontrol(void) {
       BarMotor.stop(hold);
     }
 
-    if (Controller1.ButtonA.pressing()) {
-      deployStack();
-    }
 
-    if (Controller1.ButtonRight.pressing()) {
-      flipOut();
-      // barMacro();
-    }
+    // if (Controller1.ButtonRight.pressing()) {
+    //   barMacro();
+    // }
 
     Controller1.Screen.clearScreen();
     Controller1.Screen.setCursor(0, 0);
