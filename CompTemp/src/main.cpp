@@ -290,7 +290,7 @@ double slew(double target, motor_group iSide) {
       if (iSide.velocity(pct) > target) {
         speed = target;
       }
-    } if (iSide.velocity(pct) > target) {
+    } else if (iSide.velocity(pct) > target) {
       speed = iSide.velocity(pct) - dec_rate;
       if (iSide.velocity(pct) < target) {
         speed = target;
