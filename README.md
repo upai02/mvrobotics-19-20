@@ -51,6 +51,7 @@ Includes normal competition template code and auton recorder/playback, both with
    - Fixed up autostack P-loop
    - Removed GIF integration
    - Added experimental slew rate and exponential scaling to drive 
+   - File system in development (test branch)
 
 ## To-Do
 * Test and fix auton code (CompTemp)
