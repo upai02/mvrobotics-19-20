@@ -512,23 +512,23 @@ void drive_Hybrid(double deadzone) {
   RightSide.spin(vex::directionType::fwd, (forward + turn)/driveSpeedFactor, vex::velocityUnits::pct);
 }
 
-void drive_TankExpSlew(){
-  double left = Controller1.Axis3.value();
-  double right = Controller1.Axis2.value();
+void drive_TankExpSlew(double deadzone){
+  double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
   LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
   RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
 }
 
 void drive_ArcadeExpSlew(){
-  double forward = Controller1.Axis3.value();
-  double turn = Controller1.Axis1.value();
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
   LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
   RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
 }
 
 void drive_HybridExpSlew(){
-  double forward = Controller1.Axis3.value();
-  double turn = Controller1.Axis2.value();
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
   LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
   RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
 }
@@ -795,13 +795,13 @@ void usercontrol(void) {
     // Drive Commands
     if (mode == 0) {
       //drive_Tank(17.5);
-      drive_TankExpSlew();
+      drive_TankExpSlew(17.5);
     } else if (mode == 1) {
       //drive_Arcade(17.5);
-      drive_ArcadeExpSlew();
+      drive_ArcadeExpSlew(17.5);
     } else if (mode == 2) {
       //drive_Hybrid(17.5);
-      drive_HybridExpSlew();
+      drive_HybridExpSlew(17.5);
     }
     
     // Tilter Commands
