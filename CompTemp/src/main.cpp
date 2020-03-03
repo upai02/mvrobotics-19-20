@@ -138,7 +138,7 @@ void deployStack() {
   double Ki = 0;
   double Kd = 0;
   while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
-    error = std::abs(2075-Poten.angle(rotationUnits::raw));
+    error = std::abs(4095-Poten.angle(rotationUnits::raw));
     integral += error;
     if (error < 10) {
       integral = 0;
@@ -165,16 +165,16 @@ void deployStack() {
 // }
 
 void flipOut() {
-  TilterMotor.setVelocity(100, pct);
+  TilterMotor.setVelocity(50, pct);
   Intakes.setVelocity(100, pct);
-  TilterMotor.spinFor(fwd, 400, rotationUnits::deg);
+  TilterMotor.spinFor(fwd, 460, rotationUnits::deg);
   wait(200, msec);  
-  Intakes.spinFor(directionType::rev, 1.2575, rotationUnits::rev);
+  Intakes.spinFor(directionType::rev, 1.275, rotationUnits::rev);
   wait(100, msec);
-  TilterMotor.spinFor(directionType::rev, 295, rotationUnits::deg);
   // BarMotor.spinFor(fwd, 900, deg);
-  // TilterMotor.spinFor(fwd, 475, deg);
   // BarMotor.spinFor(directionType::rev, 900, deg);
+  TilterMotor.spinFor(directionType::rev, 300, rotationUnits::deg);
+  // TilterMotor.spinFor(fwd, 475, deg);
   // Intakes.spinFor(directionType::rev, 2, rotationUnits::rev);
   // wait(50, msec);
   // TilterMotor.spinFor(directionType::rev, 450, deg);
@@ -790,7 +790,7 @@ void usercontrol(void) {
   Controller1.ButtonLeft.pressed(fadeAway);
   Controller1.ButtonB.pressed(back);
   Controller1.ButtonA.pressed(deployStack);
-  Controller1.ButtonRight.pressed(flipOut);
+  // Controller1.ButtonRight.pressed(flipOut);
   while (1) {
     // Drive Commands
     if (mode == 0) {
@@ -806,13 +806,13 @@ void usercontrol(void) {
     
     // Tilter Commands
     if (Controller1.ButtonL1.pressing()) {
-      if (Poten.angle(rotationUnits::raw) > 1750) {
+      if (Poten.angle(rotationUnits::raw) > 3250) {
         TilterMotor.spin(directionType::fwd, 25, velocityUnits::pct);
       } else {
         TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
       }
     } else if (Controller1.ButtonL2.pressing()) {
-      if (Poten.angle(rotationUnits::raw) > 515) {
+      if (Poten.angle(rotationUnits::raw) > 2340) {
         TilterMotor.spin(directionType::rev, 50, velocityUnits::pct);
       }
     } else {
@@ -831,14 +831,14 @@ void usercontrol(void) {
     // Bar Commands
     if (Controller1.ButtonUp.pressing()) {
       BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
-      if (Poten.angle(rotationUnits::raw) < 950) {
+      if (Poten.angle(rotationUnits::raw) < 2550) {
         TilterMotor.spin(directionType::fwd, 35.25, pct);
       }
     } else if (Controller1.ButtonDown.pressing()) {
       BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
       while (!(BarMotor.rotation(rotationUnits::deg) > 10)) {
         TilterMotor.spin(directionType::rev, 35.25, pct); 
-        if (Poten.angle(rotationUnits::raw) < 550) {
+        if (Poten.angle(rotationUnits::raw) < 2340) {
           break;
         }
       }
@@ -848,9 +848,10 @@ void usercontrol(void) {
     }
 
 
-    // if (Controller1.ButtonRight.pressing()) {
-    //   barMacro();
-    // }
+    if (Controller1.ButtonRight.pressing()) {
+      // barMacro();
+      flipOut();
+    }
 
     Controller1.Screen.clearScreen();
     Controller1.Screen.setCursor(0, 0);
