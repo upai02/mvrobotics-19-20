@@ -68,6 +68,6 @@ Includes normal competition template code and auton recorder/playback, both with
 * Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
-* Port main code elememts to PROS
-* Merge brain GUI and controller UI into 1 cohesive GUI (if possible)
+* Port main code elememts to PROS (for future use)
+* Merge brain GUI and controller UI (if possible)
 
