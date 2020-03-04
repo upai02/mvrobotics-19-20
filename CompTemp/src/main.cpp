@@ -318,6 +318,7 @@ double slew(double target, motor_group iSide) {
       speed = target;
     }
   }
+  wait(50, msec);
   return speed;
 }
 
@@ -367,19 +368,19 @@ double slew(double target, motor_group iSide) {
 // }
 
 void moveForward(double feet, double speed){
-    double degrees = feet * degreesPerFoot;
-    RightFrontMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
-    LeftFrontMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
-    RightRearMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
-    LeftRearMotor.rotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
+  double degrees = feet * degreesPerFoot;
+  RightFrontMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
+  LeftFrontMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
+  RightRearMotor.startRotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
+  LeftRearMotor.rotateFor(degrees, vex::rotationUnits::deg, speed, vex::velocityUnits::rpm);
 }
 
 void moveBackwards(double feet, double speed){
-    double degrees = feet * degreesPerFoot;
-    RightFrontMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
-    RightRearMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
-    LeftFrontMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
-    LeftRearMotor.rotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
+  double degrees = feet * degreesPerFoot;
+  RightFrontMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
+  RightRearMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
+  LeftFrontMotor.startRotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
+  LeftRearMotor.rotateFor(-degrees, vex::rotationUnits::deg, -speed, vex::velocityUnits::rpm);
 }
 
 void moveFwd(double target, double intake = 0) {
@@ -515,22 +516,22 @@ void drive_Hybrid(double deadzone) {
 void drive_TankExpSlew(double deadzone){
   double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftSide), vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightSide), vex::velocityUnits::pct);
 }
 
-void drive_ArcadeExpSlew(){
+void drive_ArcadeExpSlew(double deadzone){
   double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftSide), vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightSide), vex::velocityUnits::pct);
 }
 
-void drive_HybridExpSlew(){
+void drive_HybridExpSlew(double deadzone){
   double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftSide)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightSide)/driveSpeedFactor, vex::velocityUnits::pct);
+  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftSide), vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightSide), vex::velocityUnits::pct);
 }
 
 void spdToggle() {
