@@ -51,10 +51,17 @@ Includes normal competition template code and auton recorder/playback, both with
    - Fixed up autostack P-loop
    - Removed GIF integration
    - Added experimental slew rate and exponential scaling to drive 
+   
+* **3/3/2020 (post-Batavia 4)**
+   - Implemented PID into autostack and turn commands
+   - Fixed up slew rate and drive methods a bit
+   - Potentiometer and auton values updated
 
 ## To-Do
 * Test and fix auton code (CompTemp)
+* Tune all PID loops (autostack, turn, drive)
 * Tweak bar macro
+* Tweak/test slew rate
 * Tweak fadeback code
 * Sync changes between programs
 * Set up better file system for easier navigation (CompTemp and RecUI)
