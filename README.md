@@ -58,16 +58,16 @@ Includes normal competition template code and auton recorder/playback, both with
    - Potentiometer and auton values updated
 
 ## To-Do
-* Test and fix auton code (CompTemp)
 * Tune all PID loops (autostack, turn, drive)
 * Tweak bar macro
 * Tweak/test slew rate
 * Tweak fadeback code
+* Test and fix auton code (CompTemp)
 * Sync changes between programs
 * Set up better file system for easier navigation (CompTemp and RecUI)
 * Fix controller UI (AccessOS)
 * Merge the different turn functions into one with PID (AccessOS)
 * Fix saving issue (RecUI)
-* Port main code elememts to PROS (for future use)
+* Port main code elements to PROS (for future use)
 * Merge brain GUI and controller UI (if possible)
 
