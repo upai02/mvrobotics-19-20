@@ -304,11 +304,11 @@ double slew(double target, double iSide) {
   double speed = 0;
 
   if (std::abs(iSide) < std::abs(target)) {
-      if (iSide < target) {
-        step = acc_rate;
-      } else if (iSide > target) {
-        step = dec_rate;
-      }
+    if (iSide < target) {
+      step = acc_rate;
+    } else {
+      step = dec_rate;
+    }
     speed = target + step;
     if (std::abs(speed) <= std::abs(target)+2.5 && std::abs(speed) >= std::abs(target)-2.5) {
       speed = target;
@@ -581,14 +581,14 @@ void barMacro() {
 }
 
 void fadeBack() {
-  Drivetrain.setVelocity(50, velocityUnits::pct);
+  Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
   Intakes.setVelocity(65, velocityUnits::pct);
   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
 }
 
 void back() {
-  Drivetrain.setVelocity(50, velocityUnits::pct);
+  Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
   Intakes.setVelocity(65, velocityUnits::pct);
   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
