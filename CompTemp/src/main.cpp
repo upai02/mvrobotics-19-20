@@ -297,28 +297,23 @@ double signnum_c(double x) {
   return x;
 }
 
-double slew(double target, motor_group iSide) {
+double slew(double target, double iSide) {
   int acc_rate = 15;
-  int dec_rate = 15;
+  int dec_rate = -15;
+  int step = 0;
   double speed = 0;
 
-  if (target != iSide.velocity(pct)) {
-    if (iSide.velocity(pct) < target) {
-      speed = iSide.velocity(pct) + acc_rate;
-      if (iSide.velocity(pct) > target) {
-        speed = target;
+  if (std::abs(iSide) < std::abs(target)) {
+      if (iSide < target) {
+        step = acc_rate;
+      } else if (iSide > target) {
+        step = dec_rate;
       }
-    } else if (iSide.velocity(pct) > target) {
-      speed = iSide.velocity(pct) - dec_rate;
-      if (iSide.velocity(pct) < target) {
-        speed = target;
-      }
-    }
+    speed = target + step;
     if (std::abs(speed) <= std::abs(target)+2.5 && std::abs(speed) >= std::abs(target)-2.5) {
       speed = target;
     }
   }
-  wait(50, msec);
   return speed;
 }
 
@@ -516,22 +511,28 @@ void drive_Hybrid(double deadzone) {
 void drive_TankExpSlew(double deadzone){
   double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftSide), vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightSide), vex::velocityUnits::pct);
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
 }
 
 void drive_ArcadeExpSlew(double deadzone){
   double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftSide), vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightSide), vex::velocityUnits::pct);
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
 }
 
 void drive_HybridExpSlew(double deadzone){
   double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
   double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftSide), vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightSide), vex::velocityUnits::pct);
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
 }
 
 void spdToggle() {
@@ -579,9 +580,18 @@ void barMacro() {
   }
 }
 
-void fadeAway() {
-  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev, false);
-  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in);
+void fadeBack() {
+  Drivetrain.setVelocity(50, velocityUnits::pct);
+  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
+  Intakes.setVelocity(65, velocityUnits::pct);
+  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
+}
+
+void back() {
+  Drivetrain.setVelocity(50, velocityUnits::pct);
+  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
+  Intakes.setVelocity(65, velocityUnits::pct);
+  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
 }
 
 void autoRBS() {
@@ -775,10 +785,6 @@ void autonomous(void) {
   }
 }
 
-void back() {
-  SmartDrive.driveFor(directionType::rev, 6, distanceUnits::in, false);
-}
-
 void usercontrol(void) {
   LeftSide.setStopping(coast);
   RightSide.setStopping(coast);
@@ -788,7 +794,7 @@ void usercontrol(void) {
   BarMotor.resetRotation();
   Controller1.ButtonY.pressed(spdToggle);
   Controller1.ButtonX.pressed(driveSelect);
-  Controller1.ButtonLeft.pressed(fadeAway);
+  Controller1.ButtonLeft.pressed(fadeBack);
   Controller1.ButtonB.pressed(back);
   Controller1.ButtonA.pressed(deployStack);
   // Controller1.ButtonRight.pressed(flipOut);
