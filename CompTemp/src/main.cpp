@@ -5,11 +5,10 @@
 #include "MiniPID.h"
 
 using namespace vex;  
-double driveSpeedFactor = 1.3;
+double driveSpeedFactor = 1.25;
 int barPos = 0;
 int auton = -1;
 int allSpeed = 100;
-int intake = 100;
 int mode = 2;
 std::string driveType = "Hybrid Controls";
 std::string driveSpeed = "Drive Speed Normal"; 
@@ -26,7 +25,8 @@ motor LeftIntakeMotor = motor(PORT11, ratio18_1, false);
 motor RightIntakeMotor = motor(PORT12, ratio18_1, true);
 motor TilterMotor = motor(PORT18, ratio36_1, true);
 motor BarMotor = motor(PORT13, ratio36_1, false);
-pot Poten = pot(Brain.ThreeWirePort.H);
+pot Bar = pot(Brain.ThreeWirePort.A);
+pot Tilt = pot(Brain.ThreeWirePort.H);
 inertial Inertial = inertial(PORT21);
 motor_group LeftSide = motor_group(LeftFrontMotor, LeftRearMotor);
 motor_group RightSide = motor_group(RightFrontMotor, RightRearMotor);
@@ -127,31 +127,94 @@ extern void pre_auton(void) {
   vex::task::sleep(2000);
 }
 
-void deployStack() {
-  TilterMotor.setBrake(brake);
-  double error = 2075-Poten.angle(rotationUnits::raw);
-  double tilt_speed = 100;
+// void barSpinTo(int target) {
+//   if (target > Bar.angle(rotationUnits::raw)) {
+//     while (target > Bar.angle(rotationUnits::raw)) {
+//       BarMotor.spin(fwd, 100, pct);
+//     }
+//   } else if (target < Bar.angle(rotationUnits::raw)) {
+//       while (target < Bar.angle(rotationUnits::raw)) {
+//         BarMotor.spin(fwd, -100, pct);
+//     }
+//   }
+// }
+
+void barSpinTo(int target) {
+  double error = 30;
+  double speed = 100;
   double integral = 0;
   double derivative = 0;
   double prevError = 0;
-  double Kp = 0.0667;
+  double Kp = 0.121;
   double Ki = 0;
   double Kd = 0;
-  while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
-    error = std::abs(4095-Poten.angle(rotationUnits::raw));
+  while (std::abs(error) > 15) {
+    error = target - Bar.angle(rotationUnits::raw);
     integral += error;
-    if (error < 10) {
-      integral = 0;
-    }
-    if (std::abs(error) > 1500) {
-      integral = 0;
-    }
     derivative += prevError;
     prevError = error;
-    tilt_speed = Kp*error + Ki*integral + Kd*derivative;
-    TilterMotor.spin(fwd, tilt_speed, pct);
+    speed = error*Kp + integral*Ki + derivative*Kd;
+    BarMotor.spin(fwd, speed, pct);
   }
+  BarMotor.stop(hold);
 }
+
+void tiltSpinTo(int target) {
+  double error = 30;
+  double speed = 100;
+  double integral = 0;
+  double derivative = 0;
+  double prevError = 0;
+  double Kp = 0.0482;
+  double Ki = 0;
+  double Kd = 0;
+  while (std::abs(error) > 25) {
+    error = target - Tilt.angle(rotationUnits::raw);
+    integral += error;
+    derivative += prevError;
+    prevError = error;
+    speed = error*Kp + integral*Ki + derivative*Kd;
+    TilterMotor.spin(fwd, speed, pct);
+  }
+  TilterMotor.stop(brake);
+}
+
+void deployStack(double timeout) {
+  TilterMotor.setTimeout(timeout, msec);
+  tiltSpinTo(2075);
+}
+
+void deployStack() {
+  TilterMotor.setTimeout(2500, msec);
+  tiltSpinTo(2075);
+}
+
+
+// void deployStack() {
+//   TilterMotor.setBrake(brake);
+//   double error = 2075;
+//   double tilt_speed = 100;
+//   double integral = 0;
+//   double derivative = 0;
+//   double prevError = 0;
+//   double Kp = 0.0482;
+//   double Ki = 0;
+//   double Kd = 0;
+//   while (std::abs(error) > 10 && std::abs(tilt_speed) > 5) {
+//     error = 2075-Tilt.angle(rotationUnits::raw);
+//     integral += error;
+//     if (std::abs(error) < 10) {
+//       integral = 0;
+//     }
+//     if (std::abs(error) > 1500) {
+//       integral = 0;
+//     }
+//     derivative += prevError;
+//     prevError = error;
+//     tilt_speed = Kp*error + Ki*integral + Kd*derivative;
+//     TilterMotor.spin(fwd, tilt_speed, pct);
+//   }
+// }
 
 // void deployStack() {
 //   TilterMotor.setBrake(brake);
@@ -168,7 +231,8 @@ void flipOut() {
   TilterMotor.setVelocity(50, pct);
   Intakes.setVelocity(100, pct);
   TilterMotor.spinFor(fwd, 460, rotationUnits::deg);
-  wait(200, msec);  
+  // wait(200, msec);  
+  Intakes.setTimeout(200, msec);
   Intakes.spinFor(directionType::rev, 1.275, rotationUnits::rev);
   wait(100, msec);
   // BarMotor.spinFor(fwd, 900, deg);
@@ -568,26 +632,19 @@ void barMacro() {
   if (barPos == 0) {
     Intakes.spinFor(directionType::rev, 1, rotationUnits::rev);
     TilterMotor.spinFor(fwd, 250, deg, false);
-    BarMotor.spinFor(directionType::fwd, 500, rotationUnits::deg);
+    barSpinTo(420);
     barPos = 1;
   } else if (barPos == 1) {
-    BarMotor.spinFor(directionType::fwd, 250, rotationUnits::deg);
+    barSpinTo(830);
     barPos = 2;
   } else if (barPos == 2) {
-    BarMotor.spinFor(directionType::rev, 750, deg, false);
+    barSpinTo(15);
     TilterMotor.spinFor(directionType::rev, 250, deg);
     barPos = 0;
   }
 }
 
 void fadeBack() {
-  Drivetrain.setDriveVelocity(50, pct);
-  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
-  Intakes.setVelocity(65, velocityUnits::pct);
-  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
-}
-
-void back() {
   Drivetrain.setDriveVelocity(50, pct);
   Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
   Intakes.setVelocity(65, velocityUnits::pct);
@@ -754,8 +811,8 @@ void autoExp() {
 
 void autonomous(void) {
   Drivetrain.setStopping(hold);
-  Intakes.setStopping(coast);
-  BarMotor.setStopping(brake);
+  Intakes.setStopping(brake);
+  BarMotor.setStopping(hold);
   TilterMotor.setStopping(brake);
   Drivetrain.setDriveVelocity(50, pct);
   Inertial.resetRotation();
@@ -788,16 +845,13 @@ void autonomous(void) {
 void usercontrol(void) {
   LeftSide.setStopping(coast);
   RightSide.setStopping(coast);
-  Intakes.setStopping(coast);
+  Intakes.setStopping(brake);
   BarMotor.setStopping(hold);
   TilterMotor.setStopping(brake);
-  BarMotor.resetRotation();
   Controller1.ButtonY.pressed(spdToggle);
   Controller1.ButtonX.pressed(driveSelect);
-  Controller1.ButtonLeft.pressed(fadeBack);
-  Controller1.ButtonB.pressed(back);
+  Controller1.ButtonB.pressed(fadeBack);
   Controller1.ButtonA.pressed(deployStack);
-  // Controller1.ButtonRight.pressed(flipOut);
   while (1) {
     // Drive Commands
     if (mode == 0) {
@@ -813,13 +867,13 @@ void usercontrol(void) {
     
     // Tilter Commands
     if (Controller1.ButtonL1.pressing()) {
-      if (Poten.angle(rotationUnits::raw) > 3250) {
+      if (Tilt.angle(rotationUnits::raw) > 1600) {
         TilterMotor.spin(directionType::fwd, 25, velocityUnits::pct);
       } else {
         TilterMotor.spin(directionType::fwd, 35, velocityUnits::pct);
       }
     } else if (Controller1.ButtonL2.pressing()) {
-      if (Poten.angle(rotationUnits::raw) > 2340) {
+      if (Tilt.angle(rotationUnits::raw) > 620) {
         TilterMotor.spin(directionType::rev, 50, velocityUnits::pct);
       }
     } else {
@@ -828,7 +882,7 @@ void usercontrol(void) {
 
     // Intake Commands
     if (Controller1.ButtonR1.pressing()) {
-      Intakes.spin(directionType::fwd, intake, velocityUnits::pct);
+      Intakes.spin(directionType::fwd, 100, velocityUnits::pct);
     } else if (Controller1.ButtonR2.pressing()) {
       Intakes.spin(directionType::rev, 65, velocityUnits::pct);
     } else {
@@ -838,14 +892,14 @@ void usercontrol(void) {
     // Bar Commands
     if (Controller1.ButtonUp.pressing()) {
       BarMotor.spin(directionType::fwd, allSpeed, velocityUnits::pct);
-      if (Poten.angle(rotationUnits::raw) < 2550) {
+      if (Tilt.angle(rotationUnits::raw) < 1400) {
         TilterMotor.spin(directionType::fwd, 35.25, pct);
       }
     } else if (Controller1.ButtonDown.pressing()) {
       BarMotor.spin(directionType::rev, allSpeed, velocityUnits::pct);
-      while (!(BarMotor.rotation(rotationUnits::deg) > 10)) {
+      while (Bar.angle(rotationUnits::raw) < 75) {
         TilterMotor.spin(directionType::rev, 35.25, pct); 
-        if (Poten.angle(rotationUnits::raw) < 2340) {
+        if (Tilt.angle(rotationUnits::raw) < 625) {
           break;
         }
       }
