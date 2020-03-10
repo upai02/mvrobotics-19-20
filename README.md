@@ -56,12 +56,17 @@ Includes normal competition template code and auton recorder/playback, both with
    - Implemented PID into autostack and turn commands
    - Fixed up slew rate and drive methods a bit
    - Potentiometer and auton values updated
+   
+* **3/10/2020
+   - Added bar potentiometer and related methods
+   - Added new bar and tilter PID loops
+   - Tweaked bar macro for potentiometer compatibility
 
 ## To-Do
-* Tune all PID loops (autostack, turn, drive)
-* Tweak bar macro
+* Tune all PID loops (turn, drive, tilter, bar)
+* Tweak/test bar macro
 * Tweak/test slew rate
-* Tweak fadeback code
+* Tweak/test fadeback code
 * Test and fix auton code (CompTemp)
 * Sync changes between programs
 * Set up better file system for easier navigation (CompTemp and RecUI)
