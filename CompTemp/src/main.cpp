@@ -179,16 +179,10 @@ void tiltSpinTo(int target) {
   TilterMotor.stop(brake);
 }
 
-void deployStack(double timeout) {
-  TilterMotor.setTimeout(timeout, msec);
-  tiltSpinTo(2075);
-}
-
 void deployStack() {
   TilterMotor.setTimeout(2500, msec);
   tiltSpinTo(2075);
 }
-
 
 // void deployStack() {
 //   TilterMotor.setBrake(brake);
@@ -228,16 +222,14 @@ void deployStack() {
 // }
 
 void flipOut() {
-  TilterMotor.setVelocity(50, pct);
-  Intakes.setVelocity(100, pct);
-  TilterMotor.spinFor(fwd, 460, rotationUnits::deg);
-  // wait(200, msec);  
-  Intakes.setTimeout(200, msec);
-  Intakes.spinFor(directionType::rev, 1.275, rotationUnits::rev);
-  wait(100, msec);
+  // TilterMotor.setVelocity(50, pct);
+  Intakes.setVelocity(75, pct);
+  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
+  // TilterMotor.spinFor(fwd, 460, rotationUnits::deg, false);
+  // wait(100, msec);
   // BarMotor.spinFor(fwd, 900, deg);
   // BarMotor.spinFor(directionType::rev, 900, deg);
-  TilterMotor.spinFor(directionType::rev, 300, rotationUnits::deg);
+  // TilterMotor.spinFor(directionType::rev, 400, rotationUnits::deg);
   // TilterMotor.spinFor(fwd, 475, deg);
   // Intakes.spinFor(directionType::rev, 2, rotationUnits::rev);
   // wait(50, msec);
@@ -245,6 +237,17 @@ void flipOut() {
   // BarMotor.spinFor(fwd, 400, deg);
   // wait(1, msec);
   // BarMotor.spinFor(directionType::rev, 400, deg);
+}
+
+void spdToggle() {
+  if (driveSpeedFactor == 1.25) {
+    driveSpeedFactor = 2.5;
+    driveSpeed = "Drive Speed Halved";
+  } else if (driveSpeedFactor == 2.5) {
+    driveSpeedFactor = 1.25;
+    driveSpeed = "Drive Speed Normal";
+  }
+  wait(500, msec);
 }
 
 // void turn(double degrees) {
@@ -379,6 +382,95 @@ double slew(double target, double iSide) {
     }
   }
   return speed;
+}
+
+void drive_Tank(double deadzone){
+  double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
+  LeftSide.spin(vex::directionType::fwd, (left)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (right)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_Arcade(double deadzone){
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
+  LeftSide.spin(vex::directionType::fwd, (forward + turn)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (forward - turn)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_Hybrid(double deadzone) {
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
+  LeftSide.spin(vex::directionType::fwd, (forward - turn)/driveSpeedFactor, vex::velocityUnits::pct);
+  RightSide.spin(vex::directionType::fwd, (forward + turn)/driveSpeedFactor, vex::velocityUnits::pct);
+}
+
+void drive_TankExpSlew(double deadzone){
+  double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+}
+
+void drive_ArcadeExpSlew(double deadzone){
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+}
+
+void drive_HybridExpSlew(double deadzone){
+  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
+  double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
+  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
+}
+
+// double vel(double distT, double distF) {
+//   double num = sin(M_PI * ((distT-distF)/distF)) * 127 + 10;
+//   return num;
+// }
+
+void driveSelect() {
+  if (mode == 0) {
+    mode = 1;
+    driveType = "Split Arcade Controls";
+  } else if (mode == 1) {
+    mode = 2;
+    driveType = "Hybrid Controls";
+  } else if (mode == 2) {
+    mode = 0;
+    driveType = "Tank Controls";
+  }
+}
+
+void barMacro() {
+  if (barPos == 0) {
+    Intakes.spinFor(directionType::rev, 1, rotationUnits::rev);
+    TilterMotor.spinFor(fwd, 250, deg, false);
+    barSpinTo(420);
+    barPos = 1;
+  } else if (barPos == 1) {
+    barSpinTo(830);
+    barPos = 2;
+  } else if (barPos == 2) {
+    barSpinTo(15);
+    TilterMotor.spinFor(directionType::rev, 250, deg);
+    barPos = 0;
+  }
+}
+
+void fadeBack() {
+  Drivetrain.setDriveVelocity(50, pct);
+  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
+  Intakes.setVelocity(65, velocityUnits::pct);
+  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
 }
 
 // void drivePID(double target, int intake = 0, bool reset = false) {
@@ -550,106 +642,6 @@ void moveRev(double target, double intake = 0) {
 //   LeftSide.stop(brakeType::coast);
 //   RightSide.stop(brakeType::coast);
 // }
-
-void drive_Tank(double deadzone){
-  double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, (left)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, (right)/driveSpeedFactor, vex::velocityUnits::pct);
-}
-
-void drive_Arcade(double deadzone){
-  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, (forward + turn)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, (forward - turn)/driveSpeedFactor, vex::velocityUnits::pct);
-}
-
-void drive_Hybrid(double deadzone) {
-  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftSide.spin(vex::directionType::fwd, (forward - turn)/driveSpeedFactor, vex::velocityUnits::pct);
-  RightSide.spin(vex::directionType::fwd, (forward + turn)/driveSpeedFactor, vex::velocityUnits::pct);
-}
-
-void drive_TankExpSlew(double deadzone){
-  double left = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double right = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(left, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(right, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-}
-
-void drive_ArcadeExpSlew(double deadzone){
-  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double turn = (Controller1.Axis1.value() > deadzone || Controller1.Axis1.value() < -deadzone) ? Controller1.Axis1.value() : 0;
-  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-}
-
-void drive_HybridExpSlew(double deadzone){
-  double forward = (Controller1.Axis3.value() > deadzone || Controller1.Axis3.value() < -deadzone) ? Controller1.Axis3.value() : 0;
-  double turn = (Controller1.Axis2.value() > deadzone || Controller1.Axis2.value() < -deadzone) ? Controller1.Axis2.value() : 0;
-  LeftFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  LeftRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward - turn, 3), LeftRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightFrontMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightFrontMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-  RightRearMotor.spin(vex::directionType::fwd, slew(0.0001*pow(forward + turn, 3), RightRearMotor.velocity(velocityUnits::pct)), vex::velocityUnits::pct);
-}
-
-void spdToggle() {
-  if (driveSpeedFactor == 1.25) {
-    driveSpeedFactor = 2.5;
-    driveSpeed = "Drive Speed Halved";
-  } else if (driveSpeedFactor == 2.5) {
-    driveSpeedFactor = 1.25;
-    driveSpeed = "Drive Speed Normal";
-  }
-  wait(500, msec);
-}
-
-double vel(double distT, double distF) {
-  double num = sin(M_PI * ((distT-distF)/distF)) * 127 + 10;
-  return num;
-}
-
-void driveSelect() {
-  if (mode == 0) {
-    mode = 1;
-    driveType = "Split Arcade Controls";
-  } else if (mode == 1) {
-    mode = 2;
-    driveType = "Hybrid Controls";
-  } else if (mode == 2) {
-    mode = 0;
-    driveType = "Tank Controls";
-  }
-}
-
-void barMacro() {
-  if (barPos == 0) {
-    Intakes.spinFor(directionType::rev, 1, rotationUnits::rev);
-    TilterMotor.spinFor(fwd, 250, deg, false);
-    barSpinTo(420);
-    barPos = 1;
-  } else if (barPos == 1) {
-    barSpinTo(830);
-    barPos = 2;
-  } else if (barPos == 2) {
-    barSpinTo(15);
-    TilterMotor.spinFor(directionType::rev, 250, deg);
-    barPos = 0;
-  }
-}
-
-void fadeBack() {
-  Drivetrain.setDriveVelocity(50, pct);
-  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
-  Intakes.setVelocity(65, velocityUnits::pct);
-  Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
-}
 
 void autoRBS() {
   Drivetrain.driveFor(fwd, 8, inches);
@@ -852,6 +844,7 @@ void usercontrol(void) {
   Controller1.ButtonX.pressed(driveSelect);
   Controller1.ButtonB.pressed(fadeBack);
   Controller1.ButtonA.pressed(deployStack);
+  Controller1.ButtonRight.pressed(barMacro);
   while (1) {
     // Drive Commands
     if (mode == 0) {
@@ -909,7 +902,7 @@ void usercontrol(void) {
     }
 
 
-    if (Controller1.ButtonRight.pressing()) {
+    if (Controller1.ButtonLeft.pressing()) {
       // barMacro();
       flipOut();
     }
