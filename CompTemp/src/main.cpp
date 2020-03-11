@@ -467,9 +467,9 @@ void barMacro() {
 }
 
 void fadeBack() {
-  Drivetrain.setDriveVelocity(50, pct);
-  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
+  Drivetrain.setDriveVelocity(65, pct);
   Intakes.setVelocity(65, velocityUnits::pct);
+  Drivetrain.driveFor(directionType::rev, 6, distanceUnits::in, false);
   Intakes.spinFor(directionType::rev, 3, rotationUnits::rev);
 }
 
@@ -842,7 +842,7 @@ void usercontrol(void) {
   TilterMotor.setStopping(brake);
   Controller1.ButtonY.pressed(spdToggle);
   Controller1.ButtonX.pressed(driveSelect);
-  Controller1.ButtonB.pressed(fadeBack);
+//   Controller1.ButtonB.pressed(fadeBack);
   Controller1.ButtonA.pressed(deployStack);
   Controller1.ButtonRight.pressed(barMacro);
   while (1) {
@@ -905,6 +905,10 @@ void usercontrol(void) {
     if (Controller1.ButtonLeft.pressing()) {
       // barMacro();
       flipOut();
+    }
+    
+    if (Controller1.ButtonB.pressing()) {
+      fadeBack();
     }
 
     Controller1.Screen.clearScreen();
